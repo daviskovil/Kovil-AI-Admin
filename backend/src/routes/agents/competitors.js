@@ -1,10 +1,10 @@
 import { Router } from 'express'
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { requireAuth } from '../../middleware/auth.js'
 import { agentLimiter } from '../../middleware/rateLimit.js'
 
 const router = Router()
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 
 router.post('/analyze', requireAuth, agentLimiter, async (req, res) => {
   const { competitors, focus_area } = req.body
@@ -28,15 +28,13 @@ Provide:
 Return as JSON: { competitor_profiles, keyword_gaps, content_gaps, advantages, threats, opportunities, positioning_recommendations, summary }`
 
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 2500,
-      messages: [{ role: 'user', content: prompt }]
-    })
-
-    let result = message.content[0].text
-    try { result = JSON.parse(result) } catch { /* return as text */ }
-    res.json({ result })
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' })
+    const result = await model.generateContent(prompt)
+    let text = result.response.text()
+    text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+    let parsed
+    try { parsed = JSON.parse(text) } catch { parsed = text }
+    res.json({ result: parsed })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

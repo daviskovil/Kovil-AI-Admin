@@ -1,14 +1,13 @@
 import { Router } from 'express'
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { requireAuth } from '../../middleware/auth.js'
 import { agentLimiter } from '../../middleware/rateLimit.js'
 
 const router = Router()
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 
 router.post('/draft', requireAuth, agentLimiter, async (req, res) => {
   const { type, lead, tone } = req.body
-  // type: 'lead_followup' | 'builder_welcome' | 'builder_rejection' | 'lead_intro'
 
   const prompts = {
     lead_followup: `Draft a follow-up email to a potential client lead for Kovil AI.
@@ -32,18 +31,16 @@ Tone: ${tone || 'confident, concise, value-focused'}
 Include a Calendly booking link: https://calendly.com/kovil-ai/talent`
   }
 
-  const prompt = prompts[type] || prompts.lead_followup
+  const prompt = `${prompts[type] || prompts.lead_intro}\n\nReturn JSON only: { subject, body, ps_note }`
 
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 800,
-      messages: [{ role: 'user', content: `${prompt}\n\nReturn JSON: { subject, body, ps_note }` }]
-    })
-
-    let result = message.content[0].text
-    try { result = JSON.parse(result) } catch { /* return as text */ }
-    res.json({ result })
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' })
+    const result = await model.generateContent(prompt)
+    let text = result.response.text()
+    text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+    let parsed
+    try { parsed = JSON.parse(text) } catch { parsed = text }
+    res.json({ result: parsed })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
