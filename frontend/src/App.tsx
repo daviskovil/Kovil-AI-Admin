@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import Layout from './components/Layout'
@@ -11,25 +10,28 @@ import ConversionIntelligencePage from './pages/ConversionIntelligencePage'
 import ScalingIntelligencePage from './pages/ScalingIntelligencePage'
 import SettingsPage from './pages/SettingsPage'
 
-function ProtectedRoute({ children, user }: { children: React.ReactNode; user: any }) {
+function ProtectedRoute({ children, user, loading }: { children: React.ReactNode; user: any; loading: boolean }) {
+  if (loading) return (
+    <div className="min-h-screen bg-[#f4f4f0] flex items-center justify-center">
+      <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
   if (!user) return <Navigate to="/login" replace />
   return <>{children}</>
 }
 
 export default function App() {
-  const { user, logout } = useAuth()
-  const [authUser, setAuthUser] = useState(user)
-
-  const handleLogin = (u: any) => setAuthUser(u)
-  const handleLogout = () => { logout(); setAuthUser(null) }
+  const { user, loading, logout } = useAuth()
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={authUser ? <Navigate to="/" replace /> : <LoginPage onLogin={handleLogin} />} />
+        <Route path="/login" element={
+          !loading && user ? <Navigate to="/" replace /> : <LoginPage onLogin={() => {}} />
+        } />
         <Route path="/" element={
-          <ProtectedRoute user={authUser}>
-            <Layout user={authUser!} onLogout={handleLogout} />
+          <ProtectedRoute user={user} loading={loading}>
+            <Layout user={user!} onLogout={logout} />
           </ProtectedRoute>
         }>
           <Route index element={<DashboardPage />} />

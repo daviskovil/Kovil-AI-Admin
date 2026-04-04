@@ -1,38 +1,36 @@
 import { useState, useEffect } from 'react'
-import api from '../lib/api'
-
-export interface AdminUser {
-  id: string
-  email: string
-  full_name: string
-  role: 'super_admin' | 'admin' | 'reviewer'
-}
+import { supabase } from '../lib/supabase'
+import type { User } from '@supabase/supabase-js'
 
 export function useAuth() {
-  const [user, setUser] = useState<AdminUser | null>(() => {
-    const stored = localStorage.getItem('kovil_admin_user')
-    return stored ? JSON.parse(stored) : null
-  })
-  const [loading, setLoading] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   const login = async (email: string, password: string) => {
     setLoading(true)
-    try {
-      const { data } = await api.post('/auth/login', { email, password })
-      localStorage.setItem('kovil_admin_token', data.token)
-      localStorage.setItem('kovil_admin_user', JSON.stringify(data.user))
-      setUser(data.user)
-      return { success: true }
-    } catch (err: any) {
-      return { success: false, error: err.response?.data?.error || 'Login failed' }
-    } finally {
-      setLoading(false)
-    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setLoading(false)
+    if (error) return { success: false, error: error.message }
+    return { success: true }
   }
 
-  const logout = () => {
-    localStorage.removeItem('kovil_admin_token')
-    localStorage.removeItem('kovil_admin_user')
+  const logout = async () => {
+    await supabase.auth.signOut()
     setUser(null)
   }
 
