@@ -11,7 +11,7 @@ export default function Layout({ user, onLogout }: Props) {
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar user={user} onLogout={onLogout} />
-      <main className="flex-1 ml-60 overflow-y-auto">
+      <main className="flex-1 ml-64 overflow-y-auto">
         <Outlet />
       </main>
     </div>
