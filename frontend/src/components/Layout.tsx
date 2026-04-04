@@ -1,9 +1,9 @@
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
-import { AdminUser } from '../hooks/useAuth'
+import type { User } from '@supabase/supabase-js'
 
 interface Props {
-  user: AdminUser
+  user: User
   onLogout: () => void
 }
 

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Plus, Trash2, Shield } from 'lucide-react'
 import api from '../lib/api'
-import { AdminUser } from '../hooks/useAuth'
+import type { User } from '@supabase/supabase-js'
 
-interface Props { currentUser: AdminUser }
+interface Props { currentUser: User }
 
 export default function UserManagementPage({ currentUser }: Props) {
   const [users, setUsers] = useState<any[]>([])

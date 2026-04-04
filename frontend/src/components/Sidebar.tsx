@@ -15,10 +15,10 @@ import {
   UserCheck,
   Kanban,
 } from 'lucide-react'
-import { AdminUser } from '../hooks/useAuth'
+import type { User } from '@supabase/supabase-js'
 
 interface Props {
-  user: AdminUser
+  user: User
   onLogout: () => void
 }
 
@@ -195,12 +195,12 @@ export default function Sidebar({ user, onLogout }: Props) {
         <div className="flex items-center gap-3 mb-3">
           <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
             <span className="text-xs font-bold text-orange-500">
-              {user.full_name?.charAt(0) || user.email.charAt(0).toUpperCase()}
+              {user.email?.charAt(0).toUpperCase()}
             </span>
           </div>
           <div className="overflow-hidden flex-1">
-            <p className="text-xs font-semibold text-gray-900 truncate">{user.full_name || 'Admin'}</p>
-            <p className="text-[10px] text-gray-400 truncate capitalize">{user.role.replace('_', ' ')}</p>
+            <p className="text-xs font-semibold text-gray-900 truncate">{user.email || 'Admin'}</p>
+            <p className="text-[10px] text-gray-400 truncate capitalize">Super Admin</p>
           </div>
         </div>
         <button
