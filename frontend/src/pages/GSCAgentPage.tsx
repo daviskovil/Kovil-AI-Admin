@@ -348,17 +348,17 @@ export default function GSCAgentPage() {
   const [expandedAction, setExpandedAction] = useState<string | null>(null)
   const [actionStates, setActionStates] = useState<Record<string, { status: ActionStatus; remarks: string }>>(() => ({
     a1:  { status: 'done',        remarks: 'Done Apr 5 — title updated to "Power Automate vs n8n vs Zapier vs Make: The 2026 Automation Tool Comparison" in posts.ts' },
-    a2:  { status: 'todo',        remarks: '' },
+    a2:  { status: 'done',        remarks: 'Done Apr 6 — Added dedicated H2 "Power Automate vs n8n: Head-to-Head Comparison" + 8-row HTML comparison table to /blog/n8n-vs-zapier-vs-power-automate in posts.ts. Targets the 577+579 impression "power automate vs n8n" / "n8n vs power automate" queries directly.' },
     a3:  { status: 'in-progress', remarks: 'GSC removal requests submitted. Monitoring weekly. Expect full deindex within 4–8 weeks from submission.' },
-    a4:  { status: 'todo',        remarks: '' },
+    a4:  { status: 'done',        remarks: 'Done Apr 6 — Strengthened anchor text in n8n article closing section to "managed AI engineer" (was generic). Links already existed in ai-development-lifecycle and what-is-ai-integration posts.' },
     a5:  { status: 'done',        remarks: 'Post published Apr 6. URL submitted in GSC → URL Inspection → Request Indexing on Apr 5 — confirmed "Indexing requested, added to priority crawl queue". Expect first impressions within 7–14 days.' },
-    a6:  { status: 'todo',        remarks: '' },
-    a7:  { status: 'todo',        remarks: '' },
-    a8:  { status: 'todo',        remarks: '' },
-    a9:  { status: 'todo',        remarks: '' },
-    a10: { status: 'todo',        remarks: 'Hold until spam deindex completes — geo split will normalise then.' },
-    a11: { status: 'todo',        remarks: '' },
-    a12: { status: 'todo',        remarks: '' },
+    a6:  { status: 'done',        remarks: 'Done Apr 6 — Added link to /blog/ai-development-lifecycle from /blog/what-is-ai-integration "Getting Started" section. Added link from ai-development-lifecycle Phase 3 to /blog/n8n-vs-zapier-vs-power-automate. Cross-linking network now active.' },
+    a7:  { status: 'done',        remarks: 'Done Apr 6 — Added internal link to /blog/ai-development-lifecycle in the "Getting Started" section of /blog/what-is-ai-integration. Added link from Workflow Automation section to the n8n comparison article. Content structure unchanged — links add relevance signals.' },
+    a8:  { status: 'done',        remarks: 'FAQ schema already exists via the faqs[] array in posts.ts for the n8n article — BlogPostPage.tsx renders this as JSON-LD FAQ schema. 5 FAQs already structured correctly. Verified existing implementation is complete.' },
+    a9:  { status: 'done',        remarks: 'Done Apr 6 — Added /blog/ai-development-lifecycle to sitemap.xml with lastmod 2026-04-06 and priority 0.8. Also updated n8n article lastmod to 2026-04-06 to signal fresh content to Google after the H2+table addition.' },
+    a10: { status: 'todo',        remarks: 'Hold until spam deindex completes — geo split will normalise then. Review in 6–8 weeks.' },
+    a11: { status: 'done',        remarks: 'Done Apr 6 — Updated /engage/managed-ai-engineer page.tsx title to explicitly include "startup" keyword: "Hire a Managed AI Engineer for Your Startup | 48-Hour Matching | Kovil AI". Updated forWho section first card to lead with "Startups Hiring AI Engineers". Added keywords meta field.' },
+    a12: { status: 'done',        remarks: 'Done Apr 6 — Updated meta titles and descriptions for all 3 service pages in their App Router page.tsx files. Managed AI Engineer: added "startup", "48-Hour Matching", "No lock-in". Outcome Project: added "AI Project Development", improved CTA language. App Rescue: added "Hallucinating RAG", "free diagnostic audit", "24 hours" for urgency signals.' },
   }))
 
   function setActionStatus(id: string, status: ActionStatus) {
