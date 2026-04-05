@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ArrowLeft, RefreshCw, TrendingUp, TrendingDown, Minus,
-         AlertTriangle, CheckCircle, Info, ExternalLink, Bell } from 'lucide-react'
+         AlertTriangle, CheckCircle, Info, ExternalLink, Bell,
+         ChevronDown, Zap, Clock, CircleCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 // ─── Data: real GSC sync 2026-04-05 ──────────────────────────────────────────
@@ -141,6 +142,129 @@ const spamUrls = [
   { url: '/onlines/6I791174623', clicks: 2, impressions: 5,  status: 'Removal requested' },
 ]
 
+// ─── Action items (Actions tab) ───────────────────────────────────────────────
+type ActionStatus = 'todo' | 'in-progress' | 'done'
+interface ActionItem {
+  id: string
+  title: string
+  detail: string
+  criticality: 'critical' | 'high' | 'medium' | 'low'
+  category: string
+  scoreImpact: number
+  page: string | null
+}
+
+const actionItems: ActionItem[] = [
+  {
+    id: 'a1',
+    title: 'Rewrite n8n article title to lead with "Power Automate vs n8n"',
+    detail: 'Current title is not matching what searchers type. Change to: "Power Automate vs n8n vs Zapier vs Make: Honest Comparison (2026)". Expected CTR lift from 0.06% to 1%+.',
+    criticality: 'critical',
+    category: 'CTR Optimisation',
+    scoreImpact: 8,
+    page: '/blog/n8n-vs-zapier-vs-power-automate',
+  },
+  {
+    id: 'a2',
+    title: 'Add H2 "Power Automate vs n8n: Head-to-Head" + comparison table',
+    detail: '577 impressions for "power automate vs n8n" at pos 11 — content needs a dedicated section answering this exact comparison. Add a 5-row comparison table covering: price, integrations, complexity, self-hosted, and best for.',
+    criticality: 'critical',
+    category: 'Content',
+    scoreImpact: 6,
+    page: '/blog/n8n-vs-zapier-vs-power-automate',
+  },
+  {
+    id: 'a3',
+    title: 'Monitor and confirm deindexing of /onlines/ spam pages',
+    detail: '30+ legacy spam pages still indexed. GSC removal requests submitted. Check GSC Coverage report weekly — these should deindex within 4–8 weeks. Once clear, Coverage score will jump from red to green.',
+    criticality: 'critical',
+    category: 'Coverage / Technical',
+    scoreImpact: 6,
+    page: '/onlines/*',
+  },
+  {
+    id: 'a4',
+    title: 'Add internal links to /engage/managed-ai-engineer from 3 pages',
+    detail: 'Service page stuck at pos 18.4. Add link with anchor "managed AI engineer" from: (1) Homepage hero or nav, (2) /blog/n8n-vs-zapier-vs-power-automate closing section, (3) /blog/ai-development-lifecycle Phase 4 section.',
+    criticality: 'high',
+    category: 'Internal Links',
+    scoreImpact: 5,
+    page: '/engage/managed-ai-engineer',
+  },
+  {
+    id: 'a5',
+    title: 'Submit /blog/ai-development-lifecycle for URL inspection in GSC',
+    detail: 'New post published Apr 6. Submit URL in Google Search Console → URL Inspection → Request Indexing. Confirm indexed within 7–14 days. This starts the ranking clock for the 962-impression "ai lifecycle" cluster.',
+    criticality: 'high',
+    category: 'Indexing',
+    scoreImpact: 4,
+    page: '/blog/ai-development-lifecycle',
+  },
+  {
+    id: 'a6',
+    title: 'Add internal links to /blog/ai-development-lifecycle from existing posts',
+    detail: 'New post needs link equity to rank. Add contextual links from /blog/what-is-ai-integration (high-traffic, same topic) and /engage/managed-ai-engineer. Use anchor text: "AI development lifecycle".',
+    criticality: 'high',
+    category: 'Internal Links',
+    scoreImpact: 3,
+    page: '/blog/ai-development-lifecycle',
+  },
+  {
+    id: 'a7',
+    title: 'Refresh /blog/what-is-ai-integration — stuck at position 23.4',
+    detail: '2,043 impressions at pos 23 = page 3. This page is not getting clicked. Update intro, improve H2 structure, add 3–5 internal links pointing IN from homepage and service pages. Target: move to pos 10–15 within 6 weeks.',
+    criticality: 'high',
+    category: 'Content',
+    scoreImpact: 4,
+    page: '/blog/what-is-ai-integration',
+  },
+  {
+    id: 'a8',
+    title: 'Add FAQ schema markup to n8n article',
+    detail: 'Article has strong topical authority. Adding FAQ schema can earn a rich result in Google, boosting CTR by 20–30% without any ranking change. Add 4–5 FAQ items covering: "Is n8n better than Power Automate?", "n8n vs Zapier pricing", etc.',
+    criticality: 'medium',
+    category: 'Technical SEO',
+    scoreImpact: 3,
+    page: '/blog/n8n-vs-zapier-vs-power-automate',
+  },
+  {
+    id: 'a9',
+    title: 'Verify /blog/ai-agents-vs-chatbots and /blog/rag-vs-fine-tuning are in sitemap',
+    detail: 'Upcoming posts (Apr 6 and Apr 9) must appear in sitemap.xml at publish time. Confirm auto-generation or manually add. Missing from sitemap = slower indexing.',
+    criticality: 'medium',
+    category: 'Indexing',
+    scoreImpact: 2,
+    page: '/blog/*',
+  },
+  {
+    id: 'a10',
+    title: 'Review US traffic share after spam deindex completes',
+    detail: 'Currently 22% US clicks — low for a US-targeted business. Spain + Italy traffic (42 clicks) is likely residual spam audience that will drop once /onlines/ pages deindex. Re-evaluate geo split in 6–8 weeks.',
+    criticality: 'medium',
+    category: 'Traffic Analysis',
+    scoreImpact: 2,
+    page: null,
+  },
+  {
+    id: 'a11',
+    title: 'Build a dedicated landing page targeting "hire AI engineer startup"',
+    detail: '739 impressions at pos 30 — Google thinks we are relevant, but there is no page strong enough to rank. A dedicated page or an expanded section on /engage/managed-ai-engineer could move this to page 1 within 8–12 weeks.',
+    criticality: 'medium',
+    category: 'Content',
+    scoreImpact: 3,
+    page: '/engage/managed-ai-engineer',
+  },
+  {
+    id: 'a12',
+    title: 'Add meta description to all service pages — most are auto-generated',
+    detail: 'Auto-generated meta descriptions reduce CTR. Write custom 155-char meta descriptions for: /engage/managed-ai-engineer, /engage/outcome-based-project, /engage/app-rescue. Focus on value prop + CTA.',
+    criticality: 'low',
+    category: 'CTR Optimisation',
+    scoreImpact: 2,
+    page: '/engage/*',
+  },
+]
+
 // Health sub-scores
 const subScores = [
   { label: 'Organic CTR',          score: 15, note: '0.43% vs 3%+ target' },
@@ -210,15 +334,33 @@ function tagEl(tag: string) {
   return <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${t.cls}`}>{t.label}</span>
 }
 
-type Tab = 'dashboard' | 'traffic' | 'keywords' | 'pages' | 'reports'
+type Tab = 'dashboard' | 'traffic' | 'keywords' | 'pages' | 'reports' | 'actions'
 type KwTab = 'top' | 'ctr-gaps' | 'page2' | 'zero-click' | 'brand'
+type ActionFilter = 'all' | 'critical' | 'high' | 'medium' | 'low' | 'todo' | 'in-progress' | 'done'
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function GSCAgentPage() {
-  const [scanning, setScanning]   = useState(false)
-  const [tab, setTab]             = useState<Tab>('dashboard')
-  const [kwTab, setKwTab]         = useState<KwTab>('top')
-  const [dismissed, setDismissed] = useState<number[]>([])
+  const [scanning, setScanning]         = useState(false)
+  const [tab, setTab]                   = useState<Tab>('dashboard')
+  const [kwTab, setKwTab]               = useState<KwTab>('top')
+  const [dismissed, setDismissed]       = useState<number[]>([])
+  const [actionFilter, setActionFilter] = useState<ActionFilter>('all')
+  const [expandedAction, setExpandedAction] = useState<string | null>(null)
+  const [actionStates, setActionStates] = useState<Record<string, { status: ActionStatus; remarks: string }>>(
+    () => Object.fromEntries(actionItems.map(a => [a.id, { status: 'todo' as ActionStatus, remarks: '' }]))
+  )
+
+  function setActionStatus(id: string, status: ActionStatus) {
+    setActionStates(prev => ({ ...prev, [id]: { ...prev[id], status } }))
+  }
+  function setActionRemarks(id: string, remarks: string) {
+    setActionStates(prev => ({ ...prev, [id]: { ...prev[id], remarks } }))
+  }
+
+  const doneCount    = Object.values(actionStates).filter(s => s.status === 'done').length
+  const inProgCount  = Object.values(actionStates).filter(s => s.status === 'in-progress').length
+  const scoreGained  = actionItems.filter(a => actionStates[a.id]?.status === 'done').reduce((s, a) => s + a.scoreImpact, 0)
+  const scorePotential = actionItems.reduce((s, a) => s + a.scoreImpact, 0)
 
   function handleScan() { setScanning(true); setTimeout(() => setScanning(false), 3000) }
 
@@ -231,6 +373,7 @@ export default function GSCAgentPage() {
     { key: 'keywords',  label: 'Keywords' },
     { key: 'pages',     label: 'Pages' },
     { key: 'reports',   label: 'Reports' },
+    { key: 'actions',   label: 'Actions' },
   ]
 
   return (
@@ -284,6 +427,11 @@ export default function GSCAgentPage() {
             {t.key === 'dashboard' && activeAlerts.filter(a => a.severity === 'critical' || a.severity === 'high').length > 0 && (
               <span className="ml-1.5 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full inline-flex items-center justify-center">
                 {activeAlerts.filter(a => a.severity === 'critical' || a.severity === 'high').length}
+              </span>
+            )}
+            {t.key === 'actions' && (
+              <span className={`ml-1.5 text-[9px] font-bold w-4 h-4 rounded-full inline-flex items-center justify-center ${doneCount === actionItems.length ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'}`}>
+                {doneCount}
               </span>
             )}
           </button>
@@ -900,6 +1048,176 @@ export default function GSCAgentPage() {
           </div>
         </div>
       )}
+
+      {/* ── ACTIONS TAB ───────────────────────────────────────────────────────── */}
+      {tab === 'actions' && (() => {
+        const critStyle: Record<string, { badge: string; dot: string; label: string; ring: string }> = {
+          critical: { badge: 'bg-red-100 text-red-700',    dot: 'bg-red-500',    label: 'Critical', ring: 'border-l-4 border-l-red-400' },
+          high:     { badge: 'bg-orange-100 text-orange-700', dot: 'bg-orange-500', label: 'High',  ring: 'border-l-4 border-l-orange-400' },
+          medium:   { badge: 'bg-amber-100 text-amber-700',  dot: 'bg-amber-400',  label: 'Medium', ring: 'border-l-4 border-l-amber-300' },
+          low:      { badge: 'bg-blue-100 text-blue-700',    dot: 'bg-blue-400',   label: 'Low',    ring: 'border-l-4 border-l-blue-300' },
+        }
+        const statusStyle: Record<ActionStatus, { bg: string; text: string; label: string; icon: React.ReactNode }> = {
+          'todo':        { bg: 'bg-gray-100',   text: 'text-gray-500',   label: 'To Do',       icon: <Clock className="h-3 w-3"/> },
+          'in-progress': { bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'In Progress', icon: <Zap className="h-3 w-3"/> },
+          'done':        { bg: 'bg-green-100',   text: 'text-green-700',  label: 'Done',        icon: <CircleCheck className="h-3 w-3"/> },
+        }
+
+        const filtered = actionItems.filter(a => {
+          if (actionFilter === 'all') return true
+          if (actionFilter === 'todo' || actionFilter === 'in-progress' || actionFilter === 'done')
+            return actionStates[a.id]?.status === actionFilter
+          return a.criticality === actionFilter
+        })
+
+        return (
+          <div className="space-y-5">
+
+            {/* Score progress bar */}
+            <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-xs font-bold text-gray-700">Actions Progress — Score Impact Tracker</h3>
+                  <p className="text-[11px] text-gray-400 mt-0.5">Completing all actions could raise the health score from {overallScore} → {Math.min(100, overallScore + scorePotential)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-display font-bold text-2xl text-orange-500">{doneCount} / {actionItems.length}</p>
+                  <p className="text-[10px] text-gray-400">actions completed</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-4 mb-4">
+                {[
+                  { label: 'To Do',       count: actionItems.length - doneCount - inProgCount, color: 'text-gray-500', bg: 'bg-gray-50', border: 'border-gray-100' },
+                  { label: 'In Progress', count: inProgCount,  color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
+                  { label: 'Done',        count: doneCount,    color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-100' },
+                  { label: 'Score gained',count: scoreGained,  color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-100', suffix: ' pts' },
+                ].map(s => (
+                  <div key={s.label} className={`${s.bg} border ${s.border} rounded-xl p-3 text-center`}>
+                    <p className={`font-display font-bold text-2xl ${s.color}`}>{s.count}{'suffix' in s ? s.suffix : ''}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-2 bg-orange-400 rounded-full transition-all" style={{ width: `${(doneCount / actionItems.length) * 100}%` }}/>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mr-1">Filter:</span>
+              {(['all', 'critical', 'high', 'medium', 'low', 'todo', 'in-progress', 'done'] as ActionFilter[]).map(f => (
+                <button key={f} onClick={() => setActionFilter(f)}
+                  className={`px-3 py-1 text-[10px] font-semibold rounded-full border transition-colors capitalize ${actionFilter === f ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-gray-500 border-gray-200 hover:border-orange-300'}`}>
+                  {f === 'in-progress' ? 'In Progress' : f.charAt(0).toUpperCase() + f.slice(1)}
+                </button>
+              ))}
+              <span className="text-[10px] text-gray-300 ml-2">{filtered.length} action{filtered.length !== 1 ? 's' : ''}</span>
+            </div>
+
+            {/* Action list */}
+            <div className="space-y-2">
+              {filtered.map(action => {
+                const cs = critStyle[action.criticality]
+                const st = actionStates[action.id] ?? { status: 'todo' as ActionStatus, remarks: '' }
+                const ss = statusStyle[st.status]
+                const isExpanded = expandedAction === action.id
+
+                return (
+                  <div key={action.id} className={`bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden ${cs.ring}`}>
+
+                    {/* Row header */}
+                    <div className="flex items-center gap-4 px-5 py-4">
+
+                      {/* Status toggle */}
+                      <div className="relative shrink-0">
+                        <select
+                          value={st.status}
+                          onChange={e => setActionStatus(action.id, e.target.value as ActionStatus)}
+                          className={`appearance-none text-[10px] font-bold pl-6 pr-5 py-1.5 rounded-full cursor-pointer focus:outline-none transition-colors ${ss.bg} ${ss.text}`}
+                        >
+                          <option value="todo">To Do</option>
+                          <option value="in-progress">In Progress</option>
+                          <option value="done">Done</option>
+                        </select>
+                        <span className={`absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none ${ss.text}`}>{ss.icon}</span>
+                        <ChevronDown className={`absolute right-1 top-1/2 -translate-y-1/2 h-2.5 w-2.5 pointer-events-none ${ss.text}`}/>
+                      </div>
+
+                      {/* Criticality badge */}
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${cs.badge}`}>{cs.label}</span>
+
+                      {/* Title */}
+                      <p className={`text-[12px] font-semibold flex-1 leading-snug ${st.status === 'done' ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                        {action.title}
+                      </p>
+
+                      {/* Category */}
+                      <span className="text-[10px] text-gray-400 shrink-0 hidden lg:block">{action.category}</span>
+
+                      {/* Score impact */}
+                      <span className={`text-[11px] font-bold shrink-0 ${st.status === 'done' ? 'text-green-600' : 'text-orange-500'}`}>
+                        {st.status === 'done' ? '✓' : '+'}{action.scoreImpact} pts
+                      </span>
+
+                      {/* Page */}
+                      {action.page && (
+                        <a href={`https://kovil.ai${action.page}`} target="_blank" rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          className="shrink-0 text-gray-300 hover:text-orange-400 transition-colors">
+                          <ExternalLink className="h-3.5 w-3.5"/>
+                        </a>
+                      )}
+
+                      {/* Expand toggle */}
+                      <button onClick={() => setExpandedAction(isExpanded ? null : action.id)}
+                        className="shrink-0 text-gray-300 hover:text-gray-500 transition-colors">
+                        <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}/>
+                      </button>
+                    </div>
+
+                    {/* Expanded detail + remarks */}
+                    {isExpanded && (
+                      <div className="px-5 pb-5 border-t border-gray-50 pt-4 space-y-3 bg-gray-50/30">
+                        <p className="text-[11px] text-gray-600 leading-relaxed">{action.detail}</p>
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">
+                            Remarks / Dependencies / Notes
+                          </label>
+                          <textarea
+                            value={st.remarks}
+                            onChange={e => setActionRemarks(action.id, e.target.value)}
+                            placeholder="Add notes, blockers, dependencies, or what was done…"
+                            rows={2}
+                            className="w-full text-[11px] text-gray-700 bg-white border border-gray-200 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:border-orange-300 placeholder-gray-300 leading-relaxed"
+                          />
+                        </div>
+                        {action.page && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-gray-400">Affected page:</span>
+                            <a href={`https://kovil.ai${action.page}`} target="_blank" rel="noopener noreferrer"
+                              className="text-[10px] text-orange-500 hover:underline font-mono flex items-center gap-1">
+                              kovil.ai{action.page} <ExternalLink className="h-2.5 w-2.5"/>
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+
+              {filtered.length === 0 && (
+                <div className="text-center py-12 text-gray-300">
+                  <CheckCircle className="h-10 w-10 mx-auto mb-3"/>
+                  <p className="text-sm font-semibold">No actions match this filter</p>
+                </div>
+              )}
+            </div>
+
+          </div>
+        )
+      })()}
 
     </div>
   )
