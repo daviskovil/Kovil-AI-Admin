@@ -346,9 +346,20 @@ export default function GSCAgentPage() {
   const [dismissed, setDismissed]       = useState<number[]>([])
   const [actionFilter, setActionFilter] = useState<ActionFilter>('all')
   const [expandedAction, setExpandedAction] = useState<string | null>(null)
-  const [actionStates, setActionStates] = useState<Record<string, { status: ActionStatus; remarks: string }>>(
-    () => Object.fromEntries(actionItems.map(a => [a.id, { status: 'todo' as ActionStatus, remarks: '' }]))
-  )
+  const [actionStates, setActionStates] = useState<Record<string, { status: ActionStatus; remarks: string }>>(() => ({
+    a1:  { status: 'done',        remarks: 'Done Apr 5 — title updated to "Power Automate vs n8n vs Zapier vs Make: The 2026 Automation Tool Comparison" in posts.ts' },
+    a2:  { status: 'todo',        remarks: '' },
+    a3:  { status: 'in-progress', remarks: 'GSC removal requests submitted. Monitoring weekly. Expect full deindex within 4–8 weeks from submission.' },
+    a4:  { status: 'todo',        remarks: '' },
+    a5:  { status: 'in-progress', remarks: 'Post published Apr 6. Still need to submit URL in GSC → URL Inspection → Request Indexing (Davis to do manually).' },
+    a6:  { status: 'todo',        remarks: '' },
+    a7:  { status: 'todo',        remarks: '' },
+    a8:  { status: 'todo',        remarks: '' },
+    a9:  { status: 'todo',        remarks: '' },
+    a10: { status: 'todo',        remarks: 'Hold until spam deindex completes — geo split will normalise then.' },
+    a11: { status: 'todo',        remarks: '' },
+    a12: { status: 'todo',        remarks: '' },
+  }))
 
   function setActionStatus(id: string, status: ActionStatus) {
     setActionStates(prev => ({ ...prev, [id]: { ...prev[id], status } }))
