@@ -267,17 +267,17 @@ export default function OpsManagementPage({ defaultTab }: Props) {
                 {applications.map(app => (
                   <tr key={app.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-5 py-3">
-                      <p className="text-sm font-semibold text-gray-800">{app.name || '—'}</p>
+                      <p className="text-sm font-semibold text-gray-800">{app.full_name || '—'}</p>
                       <p className="text-[10px] text-gray-400">{app.email}</p>
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex flex-wrap gap-1">
-                        {(app.roles ?? []).map(r => <span key={r} className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{r}</span>)}
+                        {app.role ? <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{app.role}</span> : '—'}
                       </div>
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex flex-wrap gap-1">
-                        {(app.skills ?? []).slice(0, 3).map(s => <span key={s} className="text-[10px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded">{s}</span>)}
+                        {[...(app.specializations ?? []), ...(app.tech_stack ?? [])].slice(0, 3).map(s => <span key={s} className="text-[10px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded">{s}</span>)}
                       </div>
                     </td>
                     <td className="px-5 py-3">
@@ -485,7 +485,7 @@ export default function OpsManagementPage({ defaultTab }: Props) {
             <div className="flex items-start justify-between p-6 border-b border-gray-100">
               <div>
                 <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest mb-1">Application Detail</p>
-                <h2 className="text-lg font-bold text-gray-900">{selectedApp.name || 'Unknown'}</h2>
+                <h2 className="text-lg font-bold text-gray-900">{selectedApp.full_name || 'Unknown'}</h2>
                 <p className="text-sm text-gray-400 mt-0.5">{selectedApp.email}</p>
               </div>
               <button onClick={() => setSelectedApp(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 cursor-pointer">
@@ -528,26 +528,69 @@ export default function OpsManagementPage({ defaultTab }: Props) {
                 </div>
               </div>
 
-              {/* Roles */}
-              {(selectedApp.roles ?? []).length > 0 && (
+              {/* Role */}
+              {selectedApp.role && (
                 <div className="space-y-2">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Roles Applied For</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Role Applied For</p>
                   <div className="flex flex-wrap gap-2">
-                    {(selectedApp.roles ?? []).map(r => (
-                      <span key={r} className="text-xs bg-blue-50 text-blue-700 font-semibold px-3 py-1 rounded-full">{r}</span>
+                    <span className="text-xs bg-blue-50 text-blue-700 font-semibold px-3 py-1 rounded-full">{selectedApp.role}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Specializations */}
+              {(selectedApp.specializations ?? []).length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Specializations</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(selectedApp.specializations ?? []).map(s => (
+                      <span key={s} className="text-xs bg-orange-50 text-orange-600 font-medium px-2.5 py-1 rounded-full">{s}</span>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Skills */}
-              {(selectedApp.skills ?? []).length > 0 && (
+              {/* Tech Stack */}
+              {(selectedApp.tech_stack ?? []).length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Skills</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tech Stack</p>
                   <div className="flex flex-wrap gap-2">
-                    {(selectedApp.skills ?? []).map(s => (
-                      <span key={s} className="text-xs bg-orange-50 text-orange-600 font-medium px-2.5 py-1 rounded-full">{s}</span>
+                    {(selectedApp.tech_stack ?? []).map(s => (
+                      <span key={s} className="text-xs bg-gray-100 text-gray-600 font-medium px-2.5 py-1 rounded-full">{s}</span>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Languages */}
+              {(selectedApp.languages ?? []).length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Languages</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(selectedApp.languages ?? []).map(l => (
+                      <span key={l} className="text-xs bg-purple-50 text-purple-600 font-medium px-2.5 py-1 rounded-full">{l}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Availability & Timezone */}
+              {(selectedApp.availability || selectedApp.timezone) && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Availability</p>
+                  <div className="p-3 bg-gray-50 rounded-xl space-y-1">
+                    {selectedApp.availability && <p className="text-sm text-gray-800">{selectedApp.availability}</p>}
+                    {selectedApp.timezone && <p className="text-xs text-gray-400">{selectedApp.timezone}</p>}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {selectedApp.notes && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Notes</p>
+                  <div className="p-3 bg-orange-50 border border-orange-100 rounded-xl">
+                    <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">{selectedApp.notes}</p>
                   </div>
                 </div>
               )}
