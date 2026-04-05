@@ -20,11 +20,19 @@ interface Lead {
 
 interface Application {
   id: string
-  name?: string
+  full_name?: string
   email?: string
-  roles?: string[]
-  skills?: string[]
+  phone?: string
+  role?: string
+  specializations?: string[]
+  tech_stack?: string[]
+  languages?: string[]
   linkedin_url?: string
+  portfolio_url?: string
+  timezone?: string
+  availability?: string
+  referral_source?: string
+  notes?: string
   status?: string
   created_at?: string
 }
