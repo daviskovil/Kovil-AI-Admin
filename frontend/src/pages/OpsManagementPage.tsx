@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, FileText, UserCheck, Kanban, Plus, Download, Filter, Search, ChevronRight, RefreshCw } from 'lucide-react'
+import { Users, FileText, UserCheck, Kanban, Plus, Download, Filter, Search, ChevronRight, RefreshCw, X, Mail, Building2, Calendar, Tag, MessageSquare, Globe, Linkedin, ExternalLink } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 interface Props { defaultTab: 'leads' | 'applications' | 'roster' | 'pipeline' }
@@ -86,6 +86,10 @@ export default function OpsManagementPage({ defaultTab }: Props) {
   const [applications, setApplications] = useState<Application[]>([])
   const [leadsLoading, setLeadsLoading] = useState(true)
   const [appsLoading, setAppsLoading] = useState(true)
+
+  // ─── Slide-over state ─────────────────────────────────────────────────────
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
+  const [selectedApp, setSelectedApp] = useState<Application | null>(null)
 
   const fetchLeads = async () => {
     setLeadsLoading(true)
@@ -213,7 +217,7 @@ export default function OpsManagementPage({ defaultTab }: Props) {
                     </td>
                     <td className="px-5 py-3 text-xs text-gray-400">{formatDate(lead.created_at)}</td>
                     <td className="px-5 py-3">
-                      <button className="text-[10px] text-orange-500 font-semibold hover:underline flex items-center gap-0.5">
+                      <button onClick={() => setSelectedLead(lead)} className="text-[10px] text-orange-500 font-semibold hover:underline flex items-center gap-0.5 cursor-pointer">
                         View <ChevronRight className="h-3 w-3" />
                       </button>
                     </td>
@@ -288,7 +292,7 @@ export default function OpsManagementPage({ defaultTab }: Props) {
                     </td>
                     <td className="px-5 py-3 text-xs text-gray-400">{formatDate(app.created_at)}</td>
                     <td className="px-5 py-3">
-                      <button className="text-[10px] text-orange-500 font-semibold hover:underline flex items-center gap-0.5">
+                      <button onClick={() => setSelectedApp(app)} className="text-[10px] text-orange-500 font-semibold hover:underline flex items-center gap-0.5 cursor-pointer">
                         View <ChevronRight className="h-3 w-3" />
                       </button>
                     </td>
@@ -368,6 +372,196 @@ export default function OpsManagementPage({ defaultTab }: Props) {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── LEAD SLIDE-OVER ── */}
+      {selectedLead && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setSelectedLead(null)} />
+          <div className="relative w-full max-w-lg bg-white h-full shadow-2xl flex flex-col overflow-y-auto animate-in slide-in-from-right">
+            {/* Header */}
+            <div className="flex items-start justify-between p-6 border-b border-gray-100">
+              <div>
+                <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest mb-1">Lead Detail</p>
+                <h2 className="text-lg font-bold text-gray-900">{selectedLead.name || selectedLead.email || 'Unknown'}</h2>
+                {selectedLead.company && <p className="text-sm text-gray-400 mt-0.5">{selectedLead.company}</p>}
+              </div>
+              <button onClick={() => setSelectedLead(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 cursor-pointer">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Status bar */}
+            <div className="px-6 py-3 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
+              <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full capitalize ${statusBadge(selectedLead.status ?? 'new')}`}>
+                {(selectedLead.status ?? 'new').replace('-', ' ')}
+              </span>
+              <span className="text-xs text-gray-400">{formatDate(selectedLead.created_at)}</span>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 p-6 space-y-5">
+              {/* Contact info */}
+              <div className="space-y-3">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Contact</p>
+                <div className="grid grid-cols-1 gap-3">
+                  {selectedLead.email && (
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                      <Mail className="h-4 w-4 text-gray-400 shrink-0" />
+                      <div>
+                        <p className="text-[10px] text-gray-400">Email</p>
+                        <a href={`mailto:${selectedLead.email}`} className="text-sm font-medium text-blue-600 hover:underline">{selectedLead.email}</a>
+                      </div>
+                    </div>
+                  )}
+                  {selectedLead.company && (
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                      <Building2 className="h-4 w-4 text-gray-400 shrink-0" />
+                      <div>
+                        <p className="text-[10px] text-gray-400">Company</p>
+                        <p className="text-sm font-medium text-gray-800">{selectedLead.company}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Engagement details */}
+              <div className="space-y-3">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Engagement</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-gray-50 rounded-xl">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Tag className="h-3.5 w-3.5 text-gray-400" />
+                      <p className="text-[10px] text-gray-400">Type</p>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-800">{formatEngagement(selectedLead.engagement_type)}</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-xl">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Globe className="h-3.5 w-3.5 text-gray-400" />
+                      <p className="text-[10px] text-gray-400">Source</p>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-800">{formatSource(selectedLead.source)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Project description */}
+              {selectedLead.project_description && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <MessageSquare className="h-3.5 w-3.5 text-gray-400" />
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Message</p>
+                  </div>
+                  <div className="p-4 bg-orange-50 border border-orange-100 rounded-xl">
+                    <p className="text-sm text-gray-700 leading-relaxed">{selectedLead.project_description}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer actions */}
+            <div className="p-6 border-t border-gray-100 flex gap-3">
+              <a href={`mailto:${selectedLead.email}`} className="flex-1 flex items-center justify-center gap-2 bg-orange-500 text-white text-sm font-semibold py-2.5 rounded-xl hover:bg-orange-600 transition-colors">
+                <Mail className="h-4 w-4" /> Reply via Email
+              </a>
+              <button onClick={() => setSelectedLead(null)} className="px-4 py-2.5 border border-gray-200 text-sm text-gray-500 rounded-xl hover:bg-gray-50 cursor-pointer">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── APPLICATION SLIDE-OVER ── */}
+      {selectedApp && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setSelectedApp(null)} />
+          <div className="relative w-full max-w-lg bg-white h-full shadow-2xl flex flex-col overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-start justify-between p-6 border-b border-gray-100">
+              <div>
+                <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest mb-1">Application Detail</p>
+                <h2 className="text-lg font-bold text-gray-900">{selectedApp.name || 'Unknown'}</h2>
+                <p className="text-sm text-gray-400 mt-0.5">{selectedApp.email}</p>
+              </div>
+              <button onClick={() => setSelectedApp(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 cursor-pointer">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Status bar */}
+            <div className="px-6 py-3 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
+              <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full capitalize ${statusBadge(selectedApp.status ?? 'new')}`}>
+                {selectedApp.status ?? 'new'}
+              </span>
+              <span className="text-xs text-gray-400">{formatDate(selectedApp.created_at)}</span>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 p-6 space-y-5">
+              {/* Contact */}
+              <div className="space-y-3">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Contact</p>
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                    <Mail className="h-4 w-4 text-gray-400 shrink-0" />
+                    <div>
+                      <p className="text-[10px] text-gray-400">Email</p>
+                      <a href={`mailto:${selectedApp.email}`} className="text-sm font-medium text-blue-600 hover:underline">{selectedApp.email}</a>
+                    </div>
+                  </div>
+                  {selectedApp.linkedin_url && (
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                      <Linkedin className="h-4 w-4 text-gray-400 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] text-gray-400">LinkedIn</p>
+                        <a href={selectedApp.linkedin_url.startsWith('http') ? selectedApp.linkedin_url : `https://${selectedApp.linkedin_url}`} target="_blank" rel="noreferrer" className="text-sm font-medium text-blue-600 hover:underline flex items-center gap-1 truncate">
+                          View Profile <ExternalLink className="h-3 w-3 shrink-0" />
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Roles */}
+              {(selectedApp.roles ?? []).length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Roles Applied For</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(selectedApp.roles ?? []).map(r => (
+                      <span key={r} className="text-xs bg-blue-50 text-blue-700 font-semibold px-3 py-1 rounded-full">{r}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Skills */}
+              {(selectedApp.skills ?? []).length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Skills</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(selectedApp.skills ?? []).map(s => (
+                      <span key={s} className="text-xs bg-orange-50 text-orange-600 font-medium px-2.5 py-1 rounded-full">{s}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer actions */}
+            <div className="p-6 border-t border-gray-100 flex gap-3">
+              <a href={`mailto:${selectedApp.email}`} className="flex-1 flex items-center justify-center gap-2 bg-orange-500 text-white text-sm font-semibold py-2.5 rounded-xl hover:bg-orange-600 transition-colors">
+                <Mail className="h-4 w-4" /> Reply via Email
+              </a>
+              <button onClick={() => setSelectedApp(null)} className="px-4 py-2.5 border border-gray-200 text-sm text-gray-500 rounded-xl hover:bg-gray-50 cursor-pointer">
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
