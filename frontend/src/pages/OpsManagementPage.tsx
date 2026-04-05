@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, FileText, UserCheck, Kanban, Plus, Download, Filter, Search, ChevronRight, RefreshCw, X, Mail, Building2, Calendar, Tag, MessageSquare, Globe, Linkedin, ExternalLink } from 'lucide-react'
+import { Users, FileText, UserCheck, Kanban, Plus, Download, Filter, Search, ChevronRight, RefreshCw, X, Mail, Building2, Calendar, Tag, MessageSquare, Globe, Linkedin, ExternalLink, FileDown } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 interface Props { defaultTab: 'leads' | 'applications' | 'roster' | 'pipeline' }
@@ -32,6 +32,7 @@ interface Application {
   timezone?: string
   availability?: string
   referral_source?: string
+  resume_url?: string
   notes?: string
   status?: string
   created_at?: string
@@ -529,6 +530,17 @@ export default function OpsManagementPage({ defaultTab }: Props) {
                         <p className="text-[10px] text-gray-400">LinkedIn</p>
                         <a href={selectedApp.linkedin_url.startsWith('http') ? selectedApp.linkedin_url : `https://${selectedApp.linkedin_url}`} target="_blank" rel="noreferrer" className="text-sm font-medium text-blue-600 hover:underline flex items-center gap-1 truncate">
                           View Profile <ExternalLink className="h-3 w-3 shrink-0" />
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  {selectedApp.resume_url && (
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                      <FileDown className="h-4 w-4 text-gray-400 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] text-gray-400">Resume</p>
+                        <a href={selectedApp.resume_url} target="_blank" rel="noreferrer" className="text-sm font-medium text-blue-600 hover:underline flex items-center gap-1 truncate">
+                          Download Resume <ExternalLink className="h-3 w-3 shrink-0" />
                         </a>
                       </div>
                     </div>
