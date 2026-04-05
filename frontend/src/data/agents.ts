@@ -37,7 +37,34 @@ export interface Agent {
   actions: ActionItem[]
 }
 
-// ─── TRAFFIC INTELLIGENCE — 18 agents ───────────────────────────────────────
+// ─── TRAFFIC INTELLIGENCE — 18 agents + GSC Agent ───────────────────────────
+
+export const gscAgent: Agent = {
+  id: 't-gsc', code: 'T-GSC', label: 'GSC Performance Agent', module: 'traffic',
+  schedule: 'Daily · 06:00 EST', dataSources: ['Google Search Console'],
+  score: 30, status: 'critical', lastScanned: '2026-04-05',
+  topFinding: '60K impressions, 0.43% CTR — n8n article has 13,300 impressions at pos 7 with 0.06% CTR',
+  subScores: [
+    { label: 'Organic CTR',          score: 15 },
+    { label: 'Avg Position',         score: 38 },
+    { label: 'High-Value Page CTR',  score: 12 },
+    { label: 'Quick Win Coverage',   score: 55 },
+    { label: 'Spam Deindex Progress',score: 42 },
+    { label: 'Redirect Health',      score: 65 },
+  ],
+  findings: [
+    { severity: 'critical', title: 'n8n article: 13,300 impressions at pos 7, CTR 0.06%', whyItMatters: 'At position 7 with this many impressions, even a 1% CTR would be 133 clicks/month — 16x current.', fix: 'Optimise title tag to lead with "Power Automate vs n8n". Add H2 sections for each head-to-head comparison query.', impact: 'High' },
+    { severity: 'critical', title: '"ai lifecycle" — 962 impressions, pos 25, no matching page', whyItMatters: 'High search volume keyword with no dedicated content. Old redirect was pointing to wrong page.', fix: 'New blog post /blog/ai-development-lifecycle published 2026-04-05. Monitor weekly.', impact: 'High' },
+    { severity: 'warning',  title: '30+ /onlines/ spam pages still indexed by Google', whyItMatters: 'Spam impressions inflate total impression count and dilute domain authority signals.', fix: 'GSC removal requests submitted. Pages return 404 — will deindex naturally within 4–8 weeks.', impact: 'Medium' },
+    { severity: 'warning',  title: 'Overall CTR at 0.43% vs 2%+ industry benchmark', whyItMatters: 'Low CTR signals poor title/meta relevance to search intent. Hurts click-through across all pages.', fix: 'Prioritise title tag rewrites for top 5 high-impression pages.', impact: 'High' },
+    { severity: 'info',     title: '9 old pages fixed: redirects added for 404s with active impressions', whyItMatters: 'Previously lost 1,800+ impressions/month to broken pages. Now properly redirected.', fix: 'Monitor via GSC over next 4 weeks to confirm Google recrawls and transfers authority.', impact: 'Medium' },
+  ],
+  actions: [
+    { issue: 'n8n article CTR 0.06% on 13K impressions', whyItMatters: 'Biggest single traffic opportunity on the site.', whatToDo: 'Add H2: "Power Automate vs n8n: Head-to-Head". Add comparison table. Ensure title tag starts with primary query.', estimatedImpact: '+100–150 clicks/month if CTR reaches 1%', effort: 'Quick Fix', priority: 'High', status: 'in_progress' },
+    { issue: '"ai lifecycle" keyword cluster — 962 impressions at pos 25', whyItMatters: 'High-volume informational keyword with clear content intent.', whatToDo: 'Published /blog/ai-development-lifecycle on 2026-04-05. Monitor GSC weekly for ranking improvements.', estimatedImpact: '+20–40 clicks/month if ranks top 5', effort: 'Medium', priority: 'High', status: 'in_progress' },
+    { issue: '30+ spam /onlines/ pages still indexed', whyItMatters: 'Diluting domain authority and impressions data.', whatToDo: 'GSC removal requests submitted. No code action needed — monitor weekly until deindexed.', estimatedImpact: 'Cleaner impression data, improved domain signals', effort: 'Quick Fix', priority: 'Medium', status: 'in_progress' },
+  ],
+}
 
 export const trafficAgents: Agent[] = [
   {

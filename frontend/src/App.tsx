@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import TrafficIntelligencePage from './pages/TrafficIntelligencePage'
 import AgentDetailPage from './pages/AgentDetailPage'
+import GSCAgentPage from './pages/GSCAgentPage'
 import OpsManagementPage from './pages/OpsManagementPage'
 import ConversionIntelligencePage from './pages/ConversionIntelligencePage'
 import ScalingIntelligencePage from './pages/ScalingIntelligencePage'
@@ -38,6 +39,7 @@ export default function App() {
 
           {/* Traffic Intelligence */}
           <Route path="traffic" element={<TrafficIntelligencePage />} />
+          <Route path="traffic/t-gsc" element={<GSCAgentPage />} />
           <Route path="traffic/:agentId" element={<AgentDetailPage />} />
 
           {/* Ops Management */}

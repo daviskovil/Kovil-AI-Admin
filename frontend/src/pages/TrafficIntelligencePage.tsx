@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import { RefreshCw } from 'lucide-react'
-import { trafficAgents, scoreColor, scoreBadge, scoreLabel, statusDot } from '../data/agents'
+import { RefreshCw, Activity } from 'lucide-react'
+import { trafficAgents, gscAgent, scoreColor, scoreBadge, scoreLabel, statusDot } from '../data/agents'
 
 const sorted = [...trafficAgents].sort((a, b) => a.score - b.score)
 
@@ -41,6 +41,52 @@ export default function TrafficIntelligencePage() {
           </div>
         ))}
       </div>
+
+      {/* GSC Agent — pinned featured card */}
+      <Link to="/traffic/t-gsc" className="block mb-6 bg-gradient-to-r from-gray-900 to-gray-800 border border-gray-700 rounded-2xl p-6 shadow-lg hover:shadow-xl hover:border-orange-500/40 transition-all group">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-red-500/20 p-2.5 rounded-xl">
+              <Activity className="h-5 w-5 text-red-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">T-GSC · Flagship Agent</span>
+                <span className="bg-red-900/60 text-red-300 text-[10px] font-bold px-2 py-0.5 rounded-full">Critical · {gscAgent.score}</span>
+              </div>
+              <h2 className="text-white font-display font-bold text-lg group-hover:text-orange-400 transition-colors">{gscAgent.label}</h2>
+              <p className="text-gray-400 text-[11px] mt-0.5">{gscAgent.topFinding}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-8 text-center">
+            {[
+              { label: 'Clicks',       value: '257' },
+              { label: 'Impressions',  value: '60K' },
+              { label: 'CTR',          value: '0.43%', red: true },
+              { label: 'Avg Position', value: '18.6',  red: true },
+            ].map(s => (
+              <div key={s.label}>
+                <p className={`font-display font-bold text-xl ${s.red ? 'text-red-400' : 'text-white'}`}>{s.value}</p>
+                <p className="text-gray-500 text-[10px]">{s.label}</p>
+              </div>
+            ))}
+            <div className="text-orange-400 text-xs font-semibold group-hover:translate-x-1 transition-transform">View Report →</div>
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-6 gap-2">
+          {gscAgent.subScores.map(s => (
+            <div key={s.label}>
+              <div className="flex justify-between mb-1">
+                <span className="text-[9px] text-gray-500">{s.label}</span>
+                <span className={`text-[9px] font-bold ${s.score >= 60 ? 'text-amber-400' : 'text-red-400'}`}>{s.score}</span>
+              </div>
+              <div className="h-1 bg-gray-700 rounded-full">
+                <div className={`h-1 rounded-full ${s.score >= 60 ? 'bg-amber-400' : 'bg-red-500'}`} style={{ width: `${s.score}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </Link>
 
       {/* Agent grid — worst first */}
       <div className="grid grid-cols-3 gap-4">
