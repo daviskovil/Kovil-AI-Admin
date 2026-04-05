@@ -351,7 +351,7 @@ export default function GSCAgentPage() {
     a2:  { status: 'todo',        remarks: '' },
     a3:  { status: 'in-progress', remarks: 'GSC removal requests submitted. Monitoring weekly. Expect full deindex within 4–8 weeks from submission.' },
     a4:  { status: 'todo',        remarks: '' },
-    a5:  { status: 'in-progress', remarks: 'Post published Apr 6. Still need to submit URL in GSC → URL Inspection → Request Indexing (Davis to do manually).' },
+    a5:  { status: 'done',        remarks: 'Post published Apr 6. URL submitted in GSC → URL Inspection → Request Indexing on Apr 5 — confirmed "Indexing requested, added to priority crawl queue". Expect first impressions within 7–14 days.' },
     a6:  { status: 'todo',        remarks: '' },
     a7:  { status: 'todo',        remarks: '' },
     a8:  { status: 'todo',        remarks: '' },
