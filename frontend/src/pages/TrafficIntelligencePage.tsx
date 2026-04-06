@@ -42,7 +42,7 @@ export default function TrafficIntelligencePage() {
 
       {/* Agent grid — GSC pinned first, then worst first */}
       <div className="grid grid-cols-3 gap-4">
-        {/* GSC Agent — pinned at top */}
+        {/* GSC Agent — pinned #1 */}
         <Link
           to="/traffic/t-gsc"
           className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-orange-200 transition-all group cursor-pointer"
@@ -79,6 +79,45 @@ export default function TrafficIntelligencePage() {
             </p>
             <button
               onClick={e => { e.preventDefault(); alert(`Scanning ${gscAgent.label}…`) }}
+              className="flex items-center gap-1 text-[10px] text-orange-500 font-semibold hover:underline"
+            >
+              <RefreshCw className="h-3 w-3" /> Run Scan
+            </button>
+          </div>
+        </Link>
+
+        {/* Blog Optimizer Agent — pinned #2 */}
+        <Link
+          to="/traffic/t-blog-optimizer"
+          className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-orange-200 transition-all group cursor-pointer"
+        >
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-amber-400" />
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">T-BLOG-OPT</span>
+              <span className="text-[9px] font-bold text-orange-500 uppercase tracking-wider">· Flagship</span>
+            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 ring-1 ring-amber-200">
+              Needs Work
+            </span>
+          </div>
+          <h3 className="text-sm font-semibold text-gray-900 group-hover:text-orange-500 transition-colors leading-snug mb-1">
+            Blog Optimizer Agent
+          </h3>
+          <p className="text-[10px] text-gray-400 mb-4">Scores SEO · AEO · GEO across all blog posts</p>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-2 rounded-full bg-amber-400" style={{ width: '74%' }} />
+            </div>
+            <span className="text-sm font-bold w-8 text-right text-amber-600">74</span>
+          </div>
+          <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-2">
+            6 of 10 posts below 80 avg score. Top gap: missing FAQ sections and internal links on older posts.
+          </p>
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
+            <p className="text-[10px] text-gray-300">10 posts · 74 avg score</p>
+            <button
+              onClick={e => e.preventDefault()}
               className="flex items-center gap-1 text-[10px] text-orange-500 font-semibold hover:underline"
             >
               <RefreshCw className="h-3 w-3" /> Run Scan
