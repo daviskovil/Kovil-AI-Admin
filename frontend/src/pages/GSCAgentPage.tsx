@@ -1,8 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ArrowLeft, RefreshCw, TrendingUp, TrendingDown, Minus,
-         AlertTriangle, CheckCircle, Info, ExternalLink, Bell,
-         ChevronDown, Zap, Clock, CircleCheck } from 'lucide-react'
+         AlertTriangle, CheckCircle, Info, ExternalLink, Bell, ChevronDown } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import api from '../lib/api'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface GSCSnapshot {
+  id: string
+  synced_at: string
+  date_range_start: string
+  date_range_end: string
+  overview: { clicks: number; impressions: number; ctr: number; avgPosition: number }
+  by_query:   { query: string;   clicks: number; impressions: number; ctr: number; position: number }[]
+  by_page:    { page: string;    clicks: number; impressions: number; ctr: number; position: number }[]
+  by_country: { country: string; clicks: number; impressions: number; ctr: number; position: number }[]
+  by_device:  { device: string;  clicks: number; impressions: number; ctr: number; position: number }[]
+  by_date:    { date: string;    clicks: number; impressions: number; ctr: number; position: number }[]
+}
 
 // ─── Data: real GSC sync 2026-04-05 ──────────────────────────────────────────
 const LAST_SYNCED = '2026-04-05 · 09:45 EST'
@@ -341,31 +355,73 @@ type ActionFilter = 'all' | 'critical' | 'high' | 'medium' | 'low' | 'todo' | 'i
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function GSCAgentPage() {
   const [scanning, setScanning]         = useState(false)
+  const [syncError, setSyncError]       = useState<string | null>(null)
   const [tab, setTab]                   = useState<Tab>('dashboard')
   const [kwTab, setKwTab]               = useState<KwTab>('top')
   const [dismissed, setDismissed]       = useState<number[]>([])
   const [actionFilter, setActionFilter] = useState<ActionFilter>('all')
   const [expandedAction, setExpandedAction] = useState<string | null>(null)
-  const [actionStates, setActionStates] = useState<Record<string, { status: ActionStatus; remarks: string }>>(() => ({
-    a1:  { status: 'done',        remarks: 'Done Apr 5 — title updated to "Power Automate vs n8n vs Zapier vs Make: The 2026 Automation Tool Comparison" in posts.ts' },
-    a2:  { status: 'done',        remarks: 'Done Apr 6 — Added dedicated H2 "Power Automate vs n8n: Head-to-Head Comparison" + 8-row HTML comparison table to /blog/n8n-vs-zapier-vs-power-automate in posts.ts. Targets the 577+579 impression "power automate vs n8n" / "n8n vs power automate" queries directly.' },
-    a3:  { status: 'done',        remarks: 'Done — GSC Removals confirmed "Temporarily removed" status as of 3 Apr 2026 for both: (1) https://kovil.ai/onlines/ prefix removal covering all spam pages, (2) https://kovil.ai/blogs/ old URL path. Spam pages are now suppressed from Google Search. Pages return 404 so permanent deindex will follow naturally. Product snippets count (366) and Spain/Italy traffic will normalize as deindex completes. No further action needed.' },
-    a4:  { status: 'done',        remarks: 'Done Apr 6 — Strengthened anchor text in n8n article closing section to "managed AI engineer" (was generic). Links already existed in ai-development-lifecycle and what-is-ai-integration posts.' },
-    a5:  { status: 'done',        remarks: 'Post published Apr 6. URL submitted in GSC → URL Inspection → Request Indexing on Apr 5 — confirmed "Indexing requested, added to priority crawl queue". Expect first impressions within 7–14 days.' },
-    a6:  { status: 'done',        remarks: 'Done Apr 6 — Added link to /blog/ai-development-lifecycle from /blog/what-is-ai-integration "Getting Started" section. Added link from ai-development-lifecycle Phase 3 to /blog/n8n-vs-zapier-vs-power-automate. Cross-linking network now active.' },
-    a7:  { status: 'done',        remarks: 'Done Apr 6 — Added internal link to /blog/ai-development-lifecycle in the "Getting Started" section of /blog/what-is-ai-integration. Added link from Workflow Automation section to the n8n comparison article. Content structure unchanged — links add relevance signals.' },
-    a8:  { status: 'done',        remarks: 'FAQ schema already exists via the faqs[] array in posts.ts for the n8n article — BlogPostPage.tsx renders this as JSON-LD FAQ schema. 5 FAQs already structured correctly. Verified existing implementation is complete.' },
-    a9:  { status: 'done',        remarks: 'Done Apr 6 — Added /blog/ai-development-lifecycle to sitemap.xml with lastmod 2026-04-06 and priority 0.8. Also updated n8n article lastmod to 2026-04-06 to signal fresh content to Google after the H2+table addition.' },
-    a10: { status: 'todo',        remarks: 'Hold until spam deindex completes — geo split will normalise then. Review in 6–8 weeks.' },
-    a11: { status: 'done',        remarks: 'Done Apr 6 — Updated /engage/managed-ai-engineer page.tsx title to explicitly include "startup" keyword: "Hire a Managed AI Engineer for Your Startup | 48-Hour Matching | Kovil AI". Updated forWho section first card to lead with "Startups Hiring AI Engineers". Added keywords meta field.' },
-    a12: { status: 'done',        remarks: 'Done Apr 6 — Updated meta titles and descriptions for all 3 service pages in their App Router page.tsx files. Managed AI Engineer: added "startup", "48-Hour Matching", "No lock-in". Outcome Project: added "AI Project Development", improved CTA language. App Rescue: added "Hallucinating RAG", "free diagnostic audit", "24 hours" for urgency signals.' },
-  }))
+  const [actionStates, setActionStates] = useState<Record<string, { status: ActionStatus; remarks: string }>>({})
+  const [savingAction, setSavingAction] = useState<string | null>(null)
+  const [snapshot, setSnapshot]         = useState<GSCSnapshot | null>(null)
+  const [loadingData, setLoadingData]   = useState(true)
+  const remarksTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
-  function setActionStatus(id: string, status: ActionStatus) {
-    setActionStates(prev => ({ ...prev, [id]: { ...prev[id], status } }))
+  // ── Load snapshot + action states on mount ──────────────────────────────────
+  useEffect(() => {
+    async function init() {
+      try {
+        const [dataRes, actionsRes] = await Promise.all([
+          api.get('/agents/gsc/data'),
+          api.get('/agents/gsc/actions'),
+        ])
+        if (dataRes.data.snapshot) setSnapshot(dataRes.data.snapshot)
+        const states: Record<string, { status: ActionStatus; remarks: string }> = {}
+        ;(actionsRes.data.actions || []).forEach((a: any) => {
+          states[a.id] = { status: a.status as ActionStatus, remarks: a.remarks || '' }
+        })
+        setActionStates(states)
+      } catch {
+        // fallback: keep empty state, user can still use the UI
+      } finally {
+        setLoadingData(false)
+      }
+    }
+    init()
+  }, [])
+
+  // ── Sync GSC data ───────────────────────────────────────────────────────────
+  async function handleScan() {
+    setScanning(true)
+    setSyncError(null)
+    try {
+      const { data } = await api.post('/agents/gsc/sync')
+      if (data.snapshot) setSnapshot(data.snapshot)
+    } catch (err: any) {
+      setSyncError(err.response?.data?.error || 'Sync failed — check backend logs')
+    } finally {
+      setScanning(false)
+    }
   }
+
+  // ── Action state handlers (API-backed) ──────────────────────────────────────
+  async function setActionStatus(id: string, status: ActionStatus) {
+    setActionStates(prev => ({ ...prev, [id]: { ...prev[id], status } }))
+    setSavingAction(id)
+    try {
+      await api.put(`/agents/gsc/actions/${id}`, { status })
+    } finally {
+      setSavingAction(null)
+    }
+  }
+
   function setActionRemarks(id: string, remarks: string) {
     setActionStates(prev => ({ ...prev, [id]: { ...prev[id], remarks } }))
+    // Debounce save to API
+    if (remarksTimers.current[id]) clearTimeout(remarksTimers.current[id])
+    remarksTimers.current[id] = setTimeout(async () => {
+      try { await api.put(`/agents/gsc/actions/${id}`, { remarks }) } catch {}
+    }, 800)
   }
 
   const doneCount    = Object.values(actionStates).filter(s => s.status === 'done').length
@@ -373,7 +429,79 @@ export default function GSCAgentPage() {
   const scoreGained  = actionItems.filter(a => actionStates[a.id]?.status === 'done').reduce((s, a) => s + a.scoreImpact, 0)
   const scorePotential = actionItems.reduce((s, a) => s + a.scoreImpact, 0)
 
-  function handleScan() { setScanning(true); setTimeout(() => setScanning(false), 3000) }
+  // ── Live data — use snapshot when available, else fall back to static ────────
+  const liveOverview = snapshot?.overview ?? overview
+
+  const liveStats = [
+    { label: 'Clicks (28d)',  value: liveOverview.clicks.toLocaleString(),            change: null,   note: 'No prior period data yet' },
+    { label: 'Impressions',   value: liveOverview.impressions.toLocaleString(),        change: null,   note: 'No prior period data yet' },
+    { label: 'Avg CTR',       value: `${liveOverview.ctr}%`,                           change: 'down', note: 'Target >3%' },
+    { label: 'Avg Position',  value: `${liveOverview.avgPosition}`,                    change: 'down', note: 'Target <10' },
+  ]
+
+  const flagMap: Record<string, string> = {
+    usa: '🇺🇸', ind: '🇮🇳', esp: '🇪🇸', ita: '🇮🇹', gbr: '🇬🇧', can: '🇨🇦', mex: '🇲🇽',
+    deu: '🇩🇪', fra: '🇫🇷', aus: '🇦🇺', bra: '🇧🇷', phl: '🇵🇭', pak: '🇵🇰', nld: '🇳🇱',
+    sgp: '🇸🇬', nzl: '🇳🇿', zaf: '🇿🇦', are: '🇦🇪', prt: '🇵🇹', pol: '🇵🇱',
+  }
+
+  const liveCountries = snapshot?.by_country?.map(c => ({
+    country: c.country.charAt(0).toUpperCase() + c.country.slice(1),
+    clicks: c.clicks, impressions: c.impressions,
+    flag: flagMap[c.country.toLowerCase()] ?? '🌐',
+  })) ?? countries
+
+  const maxCountryClicks = Math.max(1, ...liveCountries.map(c => c.clicks))
+
+  const liveDevices = snapshot?.by_device?.map(d => ({
+    d: d.device.charAt(0).toUpperCase() + d.device.slice(1),
+    clicks: d.clicks, impressions: d.impressions,
+    pct: liveOverview.clicks > 0 ? Math.round((d.clicks / liveOverview.clicks) * 100) : 0,
+  })) ?? devices
+
+  const liveDateTrend = snapshot?.by_date
+    ? (() => {
+        // Group daily data into weekly buckets
+        const sorted = [...snapshot.by_date].sort((a, b) => a.date.localeCompare(b.date))
+        const weeks: { week: string; clicks: number; impressions: number }[] = []
+        for (let i = 0; i < sorted.length; i += 7) {
+          const chunk = sorted.slice(i, i + 7)
+          const start = chunk[0]?.date?.slice(5) ?? ''
+          weeks.push({
+            week: `w/c ${start}`,
+            clicks: chunk.reduce((s, r) => s + r.clicks, 0),
+            impressions: chunk.reduce((s, r) => s + r.impressions, 0),
+          })
+        }
+        return weeks
+      })()
+    : trafficTrend
+
+  const maxWeekClicks = Math.max(1, ...liveDateTrend.map(w => w.clicks))
+
+  const liveKeywords = snapshot?.by_query?.slice(0, 50).map(q => ({
+    query: q.query, clicks: q.clicks, impressions: q.impressions,
+    ctr: q.ctr, position: q.position,
+    tag: q.position <= 3 ? 'quick-win' : q.impressions > 500 && q.ctr < 1 ? 'opportunity' : 'standard',
+    trend: 'stable' as const,
+  })) ?? topQueries
+
+  const livePages = snapshot?.by_page?.slice(0, 20).map(p => ({
+    page: p.page.replace('https://kovil.ai', ''),
+    label: p.page.replace('https://kovil.ai', ''),
+    weight: 'standard' as const,
+    clicks: p.clicks, impressions: p.impressions,
+    ctr: p.ctr, position: p.position,
+    status: p.ctr < 0.5 && p.impressions > 200 ? 'critical' : p.position > 15 ? 'warning' : 'healthy',
+  })) ?? topPages
+
+  const lastSyncedDisplay = snapshot
+    ? new Date(snapshot.synced_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })
+    : LAST_SYNCED
+
+  const dateRangeDisplay = snapshot
+    ? `${snapshot.date_range_start} – ${snapshot.date_range_end} (28 days)`
+    : DATE_RANGE
 
   const activeAlerts = alerts.filter((_, i) => !dismissed.includes(i))
 
@@ -403,8 +531,14 @@ export default function GSCAgentPage() {
             <span className="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full">Critical · {overallScore}/100</span>
           </div>
           <h1 className="font-display font-bold text-2xl text-gray-900">GSC Performance Agent</h1>
-          <p className="text-sm text-gray-400 mt-1">Google Search Console · {DATE_RANGE}</p>
-          <p className="text-[10px] text-gray-300 mt-0.5">Last synced: {LAST_SYNCED} · Data has 2–3 day lag inherent to GSC API</p>
+          <p className="text-sm text-gray-400 mt-1">Google Search Console · {dateRangeDisplay}</p>
+          <p className="text-[10px] text-gray-300 mt-0.5">
+            {loadingData ? 'Loading…' : snapshot ? `Last synced: ${lastSyncedDisplay} · Live data` : `Last synced: ${lastSyncedDisplay} · No sync yet — click Sync GSC Data`}
+            {' '}· Data has 2–3 day lag inherent to GSC API
+          </p>
+          {syncError && (
+            <p className="text-[10px] text-red-500 mt-1 bg-red-50 px-2 py-1 rounded-lg">⚠ {syncError}</p>
+          )}
         </div>
         <div className="flex items-center gap-4">
           <div className="text-center">
@@ -474,7 +608,7 @@ export default function GSCAgentPage() {
 
           {/* Row 2: Quick Stats */}
           <div className="grid grid-cols-4 gap-4">
-            {stats.map(s => (
+            {liveStats.map(s => (
               <div key={s.label} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
                 <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">{s.label}</p>
                 <p className={`font-display font-bold text-3xl ${s.change === 'down' ? 'text-red-500' : 'text-gray-900'}`}>{s.value}</p>
@@ -551,10 +685,10 @@ export default function GSCAgentPage() {
           {/* KPI row */}
           <div className="grid grid-cols-4 gap-4">
             {[
-              { label: 'Organic Clicks', value: '257', sub: '28-day total', color: 'text-gray-900' },
-              { label: 'Impressions',    value: '60,064', sub: '28-day total', color: 'text-gray-900' },
-              { label: 'Avg CTR',        value: '0.43%', sub: 'Target: >3%', color: 'text-red-500' },
-              { label: 'Avg Position',   value: '18.6', sub: 'Target: <10', color: 'text-red-500' },
+              { label: 'Organic Clicks', value: liveOverview.clicks.toLocaleString(),       sub: '28-day total', color: 'text-gray-900' },
+              { label: 'Impressions',    value: liveOverview.impressions.toLocaleString(),   sub: '28-day total', color: 'text-gray-900' },
+              { label: 'Avg CTR',        value: `${liveOverview.ctr}%`,                      sub: 'Target: >3%',  color: 'text-red-500' },
+              { label: 'Avg Position',   value: `${liveOverview.avgPosition}`,               sub: 'Target: <10',  color: 'text-red-500' },
             ].map(k => (
               <div key={k.label} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
                 <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">{k.label}</p>
@@ -566,10 +700,10 @@ export default function GSCAgentPage() {
 
           {/* Weekly trend (simple bar chart) */}
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-            <h3 className="text-xs font-bold text-gray-700 mb-5">Weekly Click Trend</h3>
+            <h3 className="text-xs font-bold text-gray-700 mb-5">Weekly Click Trend {snapshot && <span className="font-normal text-orange-400 ml-1">· live</span>}</h3>
             <div className="flex items-end gap-4 h-32">
-              {trafficTrend.map((w, i) => {
-                const pct = (w.clicks / 76) * 100
+              {liveDateTrend.map((w, i) => {
+                const pct = (w.clicks / maxWeekClicks) * 100
                 return (
                   <div key={i} className="flex-1 flex flex-col items-center gap-2">
                     <span className="text-[10px] font-bold text-orange-500">{w.clicks}</span>
@@ -582,15 +716,17 @@ export default function GSCAgentPage() {
                 )
               })}
             </div>
-            <p className="text-[11px] text-gray-400 mt-4 italic">Clicks are growing week-over-week. Week 4 at 76 clicks represents +46% vs Week 1. Positive trend, but absolute volume remains low.</p>
+            <p className="text-[11px] text-gray-400 mt-4 italic">
+              {snapshot ? 'Live data from Google Search Console.' : 'Snapshot from Apr 5 sync. Click "Sync GSC Data" for live numbers.'}
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
             {/* Device split */}
             <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-              <h3 className="text-xs font-bold text-gray-700 mb-4">Device Breakdown</h3>
+              <h3 className="text-xs font-bold text-gray-700 mb-4">Device Breakdown {snapshot && <span className="font-normal text-orange-400">· live</span>}</h3>
               <div className="space-y-4">
-                {devices.map(d => (
+                {liveDevices.map(d => (
                   <div key={d.d}>
                     <div className="flex justify-between mb-1">
                       <span className="text-[11px] text-gray-600 font-semibold">{d.d}</span>
@@ -610,17 +746,17 @@ export default function GSCAgentPage() {
 
             {/* Country breakdown */}
             <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-              <h3 className="text-xs font-bold text-gray-700 mb-1">Country Breakdown</h3>
+              <h3 className="text-xs font-bold text-gray-700 mb-1">Country Breakdown {snapshot && <span className="font-normal text-orange-400">· live</span>}</h3>
               <p className="text-[11px] text-amber-600 mb-4 bg-amber-50 px-3 py-2 rounded-lg">
-                ⚠️ US share is only 22% of clicks. Kovil AI is US-targeted. Spain + Italy traffic is likely residual spam audience.
+                ⚠️ US share is only ~22% of clicks. Kovil AI is US-targeted. Spain + Italy traffic is likely residual spam audience.
               </p>
               <div className="space-y-2.5">
-                {countries.map(c => (
+                {liveCountries.map(c => (
                   <div key={c.country} className="flex items-center gap-3">
                     <span className="text-sm">{c.flag}</span>
                     <span className="text-[11px] text-gray-600 w-28">{c.country}</span>
                     <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-1.5 bg-orange-400 rounded-full" style={{ width: `${(c.clicks / 57) * 100}%` }}/>
+                      <div className="h-1.5 bg-orange-400 rounded-full" style={{ width: `${(c.clicks / maxCountryClicks) * 100}%` }}/>
                     </div>
                     <span className="text-[10px] text-gray-500 w-20 text-right">{c.clicks}c / {c.impressions.toLocaleString()}i</span>
                   </div>
@@ -684,7 +820,7 @@ export default function GSCAgentPage() {
                   <div className="col-span-1 text-right">Position</div>
                   <div className="col-span-2 text-right">Type</div>
                 </div>
-                {topQueries.map((q, i) => (
+                {(snapshot ? liveKeywords : topQueries).map((q: typeof topQueries[0], i: number) => (
                   <div key={i} className="grid grid-cols-12 gap-4 px-5 py-3.5 items-center hover:bg-gray-50/50">
                     <div className="col-span-5">
                       <p className="text-sm text-gray-800">{q.query}</p>
@@ -861,7 +997,7 @@ export default function GSCAgentPage() {
                 <div className="col-span-1 text-right">Pos</div>
                 <div className="col-span-2 text-right">Status</div>
               </div>
-              {topPages.map((p, i) => (
+              {livePages.map((p, i) => (
                 <div key={i} className={`grid grid-cols-12 gap-3 px-5 py-3.5 items-center hover:bg-gray-50/50 ${p.status === 'critical' ? 'bg-red-50/20' : ''}`}>
                   <div className="col-span-4">
                     <a href={`https://kovil.ai${p.page}`} target="_blank" rel="noopener noreferrer"
@@ -1069,9 +1205,9 @@ export default function GSCAgentPage() {
           low:      { badge: 'bg-blue-100 text-blue-700',    dot: 'bg-blue-400',   label: 'Low',    ring: 'border-l-4 border-l-blue-300' },
         }
         const statusStyle: Record<ActionStatus, { bg: string; text: string; label: string; icon: React.ReactNode }> = {
-          'todo':        { bg: 'bg-gray-100',   text: 'text-gray-500',   label: 'To Do',       icon: <Clock className="h-3 w-3"/> },
-          'in-progress': { bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'In Progress', icon: <Zap className="h-3 w-3"/> },
-          'done':        { bg: 'bg-green-100',   text: 'text-green-700',  label: 'Done',        icon: <CircleCheck className="h-3 w-3"/> },
+          'todo':        { bg: 'bg-gray-100',   text: 'text-gray-500',   label: 'To Do',       icon: <Minus className="h-3 w-3"/> },
+          'in-progress': { bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'In Progress', icon: <RefreshCw className="h-3 w-3"/> },
+          'done':        { bg: 'bg-green-100',   text: 'text-green-700',  label: 'Done',        icon: <CheckCircle className="h-3 w-3"/> },
         }
 
         const filtered = actionItems.filter(a => {

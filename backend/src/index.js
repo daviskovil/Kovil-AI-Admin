@@ -13,6 +13,7 @@ import aeoRoutes from './routes/agents/aeo.js'
 import keywordsRoutes from './routes/agents/keywords.js'
 import competitorsRoutes from './routes/agents/competitors.js'
 import outreachRoutes from './routes/agents/outreach.js'
+import gscRoutes from './routes/agents/gsc.js'
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -32,6 +33,7 @@ app.use('/api/agents/aeo', aeoRoutes)
 app.use('/api/agents/keywords', keywordsRoutes)
 app.use('/api/agents/competitors', competitorsRoutes)
 app.use('/api/agents/outreach', outreachRoutes)
+app.use('/api/agents/gsc', gscRoutes)
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok', timestamp: new Date() }))
 
