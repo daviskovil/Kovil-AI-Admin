@@ -88,19 +88,25 @@ export default function DashboardPage() {
   const bandColor = scoreColor(growthScore, 'text')
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-8 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="font-display font-bold text-2xl text-gray-900">Command Centre</h1>
-        <p className="text-sm text-gray-400 mt-1">Last updated: April 4, 2026 · 06:30 EST</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="font-bold text-2xl text-gray-900 tracking-tight">Command Centre</h1>
+          <p className="text-sm text-gray-400 mt-1">Welcome back, Davis. Here's your growth intelligence overview.</p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-gray-400">Last updated</p>
+          <p className="text-xs font-semibold text-gray-600 mt-0.5">Apr 4, 2026 · 06:30 EST</p>
+        </div>
       </div>
 
       {/* Top row: Growth Score + Module Health + Alerts */}
-      <div className="grid grid-cols-12 gap-5">
+      <div className="grid grid-cols-12 gap-4">
 
         {/* Overall Growth Score */}
         <div className="col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col items-center justify-center text-center">
-          <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-4">Overall Growth Score</p>
+          <p className="text-xs font-semibold text-gray-500 mb-4">Overall Growth Score</p>
           <div className="relative">
             <ScoreRing score={growthScore} size={120} />
             <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -127,7 +133,7 @@ export default function DashboardPage() {
 
         {/* Module Health */}
         <div className="col-span-5 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-4">Module Health</p>
+          <p className="text-xs font-semibold text-gray-500 mb-4">Module Health</p>
           <div className="space-y-4">
             {[
               { label: 'Traffic Intelligence', phase: 'Phase 1', agents: trafficAgents, path: '/traffic', active: true },
@@ -160,7 +166,7 @@ export default function DashboardPage() {
 
           {/* Weekly summary mini */}
           <div className="mt-6 pt-4 border-t border-gray-50">
-            <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-3">Week of Mar 31</p>
+            <p className="text-xs font-semibold text-gray-500 mb-3">Week of Mar 31</p>
             <div className="grid grid-cols-3 gap-3">
               {[
                 { label: 'Score Change', value: '+3', color: 'text-green-600' },
@@ -179,7 +185,7 @@ export default function DashboardPage() {
         {/* Alert Feed */}
         <div className="col-span-4 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">Alert Feed</p>
+            <p className="text-xs font-semibold text-gray-500">Alert Feed</p>
             <span className="text-[10px] bg-red-50 text-red-600 font-bold px-2 py-0.5 rounded-full">
               {MOCK_ALERTS.filter(a => a.severity === 'critical').length} Critical
             </span>
@@ -308,22 +314,25 @@ export default function DashboardPage() {
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-4">Ops Snapshot</p>
+            <p className="text-xs font-semibold text-gray-500 mb-4">Ops Snapshot</p>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: 'New Leads', value: '3', icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
-                { label: 'Applications', value: '7', icon: CheckCircle2, color: 'text-purple-600', bg: 'bg-purple-50' },
-                { label: 'Active Builders', value: '4', icon: Clock, color: 'text-green-600', bg: 'bg-green-50' },
-                { label: 'Open Deals', value: '2', icon: Zap, color: 'text-orange-600', bg: 'bg-orange-50' },
+                { label: 'New Leads',      value: '3', change: '+2',  icon: TrendingUp,  color: 'text-blue-600',   bg: 'bg-blue-50'   },
+                { label: 'Applications',   value: '7', change: '+1',  icon: CheckCircle2,color: 'text-purple-600', bg: 'bg-purple-50' },
+                { label: 'Active Builders',value: '4', change: null,  icon: Clock,       color: 'text-green-600',  bg: 'bg-green-50'  },
+                { label: 'Open Deals',     value: '2', change: null,  icon: Zap,         color: 'text-orange-600', bg: 'bg-orange-50' },
               ].map(s => {
                 const Icon = s.icon
                 return (
-                  <div key={s.label} className="bg-gray-50 rounded-xl p-3">
-                    <div className={`${s.bg} ${s.color} w-7 h-7 rounded-lg flex items-center justify-center mb-2`}>
-                      <Icon className="h-3.5 w-3.5" />
+                  <div key={s.label} className="bg-gray-50 rounded-xl p-3.5">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className={`${s.bg} ${s.color} w-8 h-8 rounded-lg flex items-center justify-center`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      {s.change && <span className="text-[10px] font-semibold text-green-600">{s.change} ↗</span>}
                     </div>
-                    <p className={`font-display font-bold text-xl ${s.color}`}>{s.value}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">{s.label}</p>
+                    <p className="font-bold text-2xl text-gray-900">{s.value}</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">{s.label}</p>
                   </div>
                 )
               })}
