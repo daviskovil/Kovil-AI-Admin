@@ -12,17 +12,14 @@ export default function TrafficIntelligencePage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-bold tracking-widest text-orange-500 uppercase">Phase 1</span>
-          </div>
-          <h1 className="font-display font-bold text-2xl text-gray-900">Traffic Intelligence</h1>
+          <h1 className="font-bold text-2xl text-gray-900 tracking-tight">Traffic Intelligence</h1>
           <p className="text-sm text-gray-400 mt-1">
             18 AI agents monitoring every dimension of kovil.ai's organic search performance.
             Sorted by health score — worst first.
           </p>
         </div>
         <div className="text-right">
-          <p className={`font-display font-bold text-4xl ${scoreColor(moduleAvg, 'text')}`}>{moduleAvg}</p>
+          <p className={`font-bold text-4xl ${scoreColor(moduleAvg, 'text')}`}>{moduleAvg}</p>
           <p className="text-xs text-gray-400 mt-0.5">Module avg score</p>
         </div>
       </div>
@@ -30,14 +27,15 @@ export default function TrafficIntelligencePage() {
       {/* Score summary bar */}
       <div className="grid grid-cols-4 gap-4 mb-8">
         {[
-          { label: 'Healthy (80+)', count: trafficAgents.filter(a => a.score >= 80).length, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-100' },
-          { label: 'Needs Work (60–79)', count: trafficAgents.filter(a => a.score >= 60 && a.score < 80).length, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
-          { label: 'At Risk (40–59)', count: trafficAgents.filter(a => a.score >= 40 && a.score < 60).length, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-100' },
-          { label: 'Critical (0–39)', count: trafficAgents.filter(a => a.score < 40).length, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-100' },
+          { label: 'Healthy', sublabel: '80+', count: trafficAgents.filter(a => a.score >= 80).length, color: 'text-green-600', dotColor: 'bg-green-400' },
+          { label: 'Needs Work', sublabel: '60–79', count: trafficAgents.filter(a => a.score >= 60 && a.score < 80).length, color: 'text-amber-600', dotColor: 'bg-amber-400' },
+          { label: 'At Risk', sublabel: '40–59', count: trafficAgents.filter(a => a.score >= 40 && a.score < 60).length, color: 'text-orange-600', dotColor: 'bg-orange-400' },
+          { label: 'Critical', sublabel: '0–39', count: trafficAgents.filter(a => a.score < 40).length, color: 'text-red-600', dotColor: 'bg-red-400' },
         ].map(b => (
-          <div key={b.label} className={`${b.bg} border ${b.border} rounded-xl p-4 text-center`}>
-            <p className={`font-display font-bold text-3xl ${b.color}`}>{b.count}</p>
-            <p className="text-[10px] text-gray-500 mt-1">{b.label}</p>
+          <div key={b.label} className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
+            <div className={`w-2.5 h-2.5 rounded-full ${b.dotColor} mb-3`} />
+            <p className={`font-bold text-4xl ${b.color}`}>{b.count}</p>
+            <p className="text-sm text-gray-500 mt-1">{b.label} <span className="text-gray-400 text-xs">({b.sublabel})</span></p>
           </div>
         ))}
       </div>
