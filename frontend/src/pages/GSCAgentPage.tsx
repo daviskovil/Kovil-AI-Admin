@@ -114,11 +114,11 @@ const ctrGaps = [
 ]
 
 const page2Keywords = [
-  { query: 'power automate vs n8n',             position: 11.1, impressions: 577, page: '/blog/n8n-vs-zapier-vs-power-automate', action: 'Add comparison table + H2 targeting this exact query string' },
-  { query: 'n8n vs power automate',             position: 11.1, impressions: 579, page: '/blog/n8n-vs-zapier-vs-power-automate', action: 'Same page as above — both queries point to same content opportunity' },
-  { query: 'ai life cycle',                     position: 14.6, impressions: 138, page: '/blog/ai-development-lifecycle',       action: 'New post should capture this variant — monitor over 30 days' },
-  { query: 'what is ai integration',            position: 18.2, impressions: 2043,page: '/blog/what-is-ai-integration',         action: 'Refresh content + add internal links from homepage + service pages' },
-  { query: 'managed ai engineer',               position: 18.4, impressions: 193, page: '/engage/managed-ai-engineer',          action: 'Internal links from homepage and blog posts with exact anchor text' },
+  { query: 'power automate vs n8n',  position: 11.1, impressions: 577,  page: '/blog/n8n-vs-zapier-vs-power-automate', action: 'Add comparison table + H2 targeting this exact query string',              actionId: 'a2' },
+  { query: 'n8n vs power automate',  position: 11.1, impressions: 579,  page: '/blog/n8n-vs-zapier-vs-power-automate', action: 'Same page as above — both queries point to same content opportunity',      actionId: 'a2' },
+  { query: 'ai life cycle',          position: 14.6, impressions: 138,  page: '/blog/ai-development-lifecycle',        action: 'New post published — monitor indexing + ranking over 30 days',             actionId: 'a5' },
+  { query: 'what is ai integration', position: 18.2, impressions: 2043, page: '/blog/what-is-ai-integration',          action: 'Content refresh + internal links from homepage + service pages',           actionId: 'a7' },
+  { query: 'managed ai engineer',    position: 18.4, impressions: 193,  page: '/engage/managed-ai-engineer',           action: 'Internal links from blog posts added — add homepage link + body section',  actionId: 'a4' },
 ]
 
 const zeroClickQueries = [
@@ -884,21 +884,42 @@ export default function GSCAgentPage() {
               <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
                 <div className="divide-y divide-gray-50">
                   <div className="grid grid-cols-12 gap-4 px-5 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50/50">
-                    <div className="col-span-3">Query</div>
+                    <div className="col-span-2">Query</div>
                     <div className="col-span-1 text-right">Position</div>
-                    <div className="col-span-2 text-right">Impressions</div>
-                    <div className="col-span-3">Page</div>
-                    <div className="col-span-3">Recommended Action</div>
+                    <div className="col-span-1 text-right">Impr.</div>
+                    <div className="col-span-2">Page</div>
+                    <div className="col-span-4">Recommended Action</div>
+                    <div className="col-span-2 text-right">Status</div>
                   </div>
-                  {page2Keywords.map((k, i) => (
-                    <div key={i} className="grid grid-cols-12 gap-4 px-5 py-4 items-start hover:bg-orange-50/10">
-                      <div className="col-span-3 text-sm font-medium text-gray-800">{k.query}</div>
-                      <div className="col-span-1 text-right">{posEl(k.position)}</div>
-                      <div className="col-span-2 text-right text-sm text-gray-500">{k.impressions.toLocaleString()}</div>
-                      <div className="col-span-3 text-[10px] text-gray-400 font-mono">{k.page}</div>
-                      <div className="col-span-3 text-[11px] text-gray-500">{k.action}</div>
-                    </div>
-                  ))}
+                  {page2Keywords.map((k, i) => {
+                    const st = actionStates[k.actionId]?.status ?? 'todo'
+                    const statusCfg: Record<ActionStatus, { cls: string; label: string; dot: string }> = {
+                      'todo':        { cls: 'bg-gray-100 text-gray-500',   dot: 'bg-gray-400',   label: 'Pending' },
+                      'in-progress': { cls: 'bg-blue-100 text-blue-700',   dot: 'bg-blue-500',   label: 'In Progress' },
+                      'done':        { cls: 'bg-green-100 text-green-700', dot: 'bg-green-500',  label: 'Done' },
+                    }
+                    const cfg = statusCfg[st]
+                    return (
+                      <div key={i} className={`grid grid-cols-12 gap-4 px-5 py-4 items-start hover:bg-orange-50/10 ${st === 'done' ? 'opacity-60' : ''}`}>
+                        <div className="col-span-2 text-sm font-medium text-gray-800">{k.query}</div>
+                        <div className="col-span-1 text-right">{posEl(k.position)}</div>
+                        <div className="col-span-1 text-right text-sm text-gray-500">{k.impressions.toLocaleString()}</div>
+                        <div className="col-span-2 text-[10px] text-gray-400 font-mono leading-relaxed">{k.page}</div>
+                        <div className="col-span-4 text-[11px] text-gray-500 leading-relaxed">{k.action}</div>
+                        <div className="col-span-2 flex justify-end">
+                          <select
+                            value={st}
+                            onChange={e => setActionStatus(k.actionId, e.target.value as ActionStatus)}
+                            className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border-0 cursor-pointer appearance-none text-center ${cfg.cls}`}
+                          >
+                            <option value="todo">Pending</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="done">Done</option>
+                          </select>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             </div>
