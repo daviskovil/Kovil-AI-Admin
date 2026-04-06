@@ -114,11 +114,11 @@ const ctrGaps = [
 ]
 
 const page2Keywords = [
-  { query: 'power automate vs n8n',  position: 11.1, impressions: 577,  page: '/blog/n8n-vs-zapier-vs-power-automate', action: 'Add comparison table + H2 targeting this exact query string',              actionId: 'a2' },
-  { query: 'n8n vs power automate',  position: 11.1, impressions: 579,  page: '/blog/n8n-vs-zapier-vs-power-automate', action: 'Same page as above — both queries point to same content opportunity',      actionId: 'a2' },
-  { query: 'ai life cycle',          position: 14.6, impressions: 138,  page: '/blog/ai-development-lifecycle',        action: 'New post published — monitor indexing + ranking over 30 days',             actionId: 'a5' },
-  { query: 'what is ai integration', position: 18.2, impressions: 2043, page: '/blog/what-is-ai-integration',          action: 'Content refresh + internal links from homepage + service pages',           actionId: 'a7' },
-  { query: 'managed ai engineer',    position: 18.4, impressions: 193,  page: '/engage/managed-ai-engineer',           action: 'Internal links from blog posts added — add homepage link + body section',  actionId: 'a4' },
+  { query: 'power automate vs n8n',  position: 11.1, impressions: 577,  page: '/blog/n8n-vs-zapier-vs-power-automate', action: 'Add comparison table + H2 targeting this exact query string',              actionId: 'a2', defaultStatus: 'done'        as ActionStatus },
+  { query: 'n8n vs power automate',  position: 11.1, impressions: 579,  page: '/blog/n8n-vs-zapier-vs-power-automate', action: 'Same page as above — both queries point to same content opportunity',      actionId: 'a2', defaultStatus: 'done'        as ActionStatus },
+  { query: 'ai life cycle',          position: 14.6, impressions: 138,  page: '/blog/ai-development-lifecycle',        action: 'New post published — monitor indexing + ranking over 30 days',             actionId: 'a5', defaultStatus: 'done'        as ActionStatus },
+  { query: 'what is ai integration', position: 18.2, impressions: 2043, page: '/blog/what-is-ai-integration',          action: 'Content refresh + internal links from homepage + service pages',           actionId: 'a7', defaultStatus: 'done'        as ActionStatus },
+  { query: 'managed ai engineer',    position: 18.4, impressions: 193,  page: '/engage/managed-ai-engineer',           action: 'Internal links from blog posts added — add homepage link + body section',  actionId: 'a4', defaultStatus: 'in-progress' as ActionStatus },
 ]
 
 const zeroClickQueries = [
@@ -892,7 +892,7 @@ export default function GSCAgentPage() {
                     <div className="col-span-2 text-right">Status</div>
                   </div>
                   {page2Keywords.map((k, i) => {
-                    const st = actionStates[k.actionId]?.status ?? 'todo'
+                    const st = actionStates[k.actionId]?.status ?? k.defaultStatus
                     const statusCfg: Record<ActionStatus, { cls: string; label: string; dot: string }> = {
                       'todo':        { cls: 'bg-gray-100 text-gray-500',   dot: 'bg-gray-400',   label: 'Pending' },
                       'in-progress': { cls: 'bg-blue-100 text-blue-700',   dot: 'bg-blue-500',   label: 'In Progress' },
