@@ -66,6 +66,20 @@ function blogStatus(b: BlogEntry) {
 
 const INITIAL_BLOGS: BlogEntry[] = [
   {
+    slug: 'rag-vs-fine-tuning',
+    title: 'RAG vs Fine-Tuning: Which Should Your Company Choose in 2026?',
+    seo: 88, aeo: 86, geo: 84,
+    actions: [
+      { id: 'rf1', category: 'SEO', text: 'Published with full optimizer pass — hero image, internal links, definition blocks', impact: 'High', done: true },
+      { id: 'rf2', category: 'SEO', text: 'Added to sitemap.xml with correct lastmod and priority 0.8', impact: 'Medium', done: true },
+      { id: 'rf3', category: 'AEO', text: '5 FAQs covering highest-volume RAG vs fine-tuning search queries', impact: 'High', done: true },
+      { id: 'rf4', category: 'AEO', text: 'Definition callout blocks for both RAG and fine-tuning in opening sections', impact: 'High', done: true },
+      { id: 'rf5', category: 'GEO', text: '8-row comparison table: dimension × RAG × fine-tuning with color-coded outcomes', impact: 'High', done: true },
+      { id: 'rf6', category: 'GEO', text: 'Internal links: ai-development-lifecycle, llm-chatbot-for-business, app-rescue, managed-ai-engineer', impact: 'High', done: true },
+      { id: 'rf7', category: 'GEO', text: 'Related Articles block with 3 topically relevant posts', impact: 'Medium', done: true },
+    ],
+  },
+  {
     slug: 'why-ai-projects-fail',
     title: 'Why 80% of AI Projects Fail in Production',
     seo: 82, aeo: 85, geo: 76,
