@@ -60,7 +60,7 @@ serve(async (req) => {
 
     <div style="background:#111827;padding:28px 32px;">
       <p style="color:rgba(255,255,255,0.5);font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">Kovil AI · New Application</p>
-      <h1 style="color:white;font-size:22px;font-weight:700;margin:0;line-height:1.3;">👤 Engineer Application</h1>
+      <h1 style="color:white;font-size:22px;font-weight:700;margin:0;line-height:1.3;">👤 ${primaryRole ?? 'AI Engineer'} Application</h1>
     </div>
 
     <div style="padding:32px;">
