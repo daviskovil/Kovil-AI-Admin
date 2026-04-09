@@ -123,17 +123,17 @@ const INITIAL_BLOGS: BlogEntry[] = [
   },
   {
     slug: 'what-is-ai-integration',
-    title: 'What Is AI Integration? A Business Guide',
+    title: 'What Is AI Integration? A Complete Business Guide (2026)',
     seo: 70, aeo: 73, geo: 68,
     actions: [
-      { id: 'i1', category: 'SEO', text: 'Add hero image — currently missing, -15 SEO points', impact: 'High', done: false },
-      { id: 'i2', category: 'SEO', text: 'Expand word count to 1,500+ words — currently too short for competitive keyword', impact: 'High', done: false },
-      { id: 'i3', category: 'SEO', text: 'Add 3 internal links to relevant service and blog pages', impact: 'High', done: false },
-      { id: 'i4', category: 'AEO', text: 'Add FAQ section with 4+ questions including "How much does AI integration cost?"', impact: 'High', done: false },
-      { id: 'i5', category: 'AEO', text: 'Add "What Is AI Integration?" as H1 and keep current title for meta only', impact: 'Medium', done: false },
-      { id: 'i6', category: 'GEO', text: 'Add a definition block: "AI integration is the process of..." in the first paragraph', impact: 'High', done: false },
-      { id: 'i7', category: 'GEO', text: 'Add 3 real-world industry examples (healthcare, fintech, logistics) with specifics', impact: 'Medium', done: false },
-      { id: 'i8', category: 'GEO', text: 'Add statistics: "Companies that implement AI integration see X% reduction in..." with source', impact: 'Medium', done: false },
+      { id: 'i1', category: 'SEO', text: 'Add hero image — currently missing, -15 SEO points', impact: 'High', done: true },
+      { id: 'i2', category: 'SEO', text: 'Expand word count to 1,500+ words — currently too short for competitive keyword', impact: 'High', done: true },
+      { id: 'i3', category: 'SEO', text: 'Add 3 internal links to relevant service and blog pages', impact: 'High', done: true },
+      { id: 'i4', category: 'AEO', text: 'Add FAQ section with 4+ questions including "How much does AI integration cost?"', impact: 'High', done: true },
+      { id: 'i5', category: 'AEO', text: 'Add "What Is AI Integration?" as H1 and keep current title for meta only', impact: 'Medium', done: true },
+      { id: 'i6', category: 'GEO', text: 'Add a definition block: "AI integration is the process of..." in the first paragraph', impact: 'High', done: true },
+      { id: 'i7', category: 'GEO', text: 'Add 3 real-world industry examples (healthcare, fintech, logistics) with specifics', impact: 'Medium', done: true },
+      { id: 'i8', category: 'GEO', text: 'Add statistics: "Companies that implement AI integration see X% reduction in..." with source', impact: 'Medium', done: true },
     ],
   },
   {
@@ -216,7 +216,6 @@ const BASE_SCORES: Record<string, { seo: number; aeo: number; geo: number }> = {
 INITIAL_BLOGS.forEach(b => { BASE_SCORES[b.slug] = { seo: b.seo, aeo: b.aeo, geo: b.geo } })
 
 const IMPACT_PTS: Record<ActionItem['impact'], number> = { High: 3, Medium: 2, Low: 1 }
-const RESCORE_COOLDOWN_MS = 15 * 24 * 60 * 60 * 1000 // 15 days
 
 // ─── Score URL tab component ──────────────────────────────────────────────────
 
@@ -479,18 +478,11 @@ export default function BlogOptimizerPage() {
   const [tab, setTab]               = useState<'blogs' | 'score-url'>('blogs')
   const [selected, setSelected]     = useState<BlogEntry | null>(null)
   const [rescoring, setRescoring]   = useState(false)
-  const [lastRescore, setLastRescore] = useState<number>(() => {
-    const stored = localStorage.getItem('blogOptimizerLastRescore')
-    return stored ? parseInt(stored) : 0
-  })
 
   // Persist blogs state (done flags + scores) across page refreshes
   useEffect(() => {
     localStorage.setItem('blogOptimizerBlogs', JSON.stringify(blogs))
   }, [blogs])
-
-  const canRescore = Date.now() - lastRescore > RESCORE_COOLDOWN_MS
-  const daysUntilRescore = Math.ceil((RESCORE_COOLDOWN_MS - (Date.now() - lastRescore)) / (24 * 60 * 60 * 1000))
 
   const overallScore = Math.round(
     blogs.reduce((sum, b) => sum + avg3(b), 0) / blogs.length
@@ -530,10 +522,6 @@ export default function BlogOptimizerPage() {
 
   // Weighted rescore: each done action adds points toward 95 cap
   function handleRescore() {
-    if (!canRescore) return
-    const now = Date.now()
-    localStorage.setItem('blogOptimizerLastRescore', now.toString())
-    setLastRescore(now)
     setRescoring(true)
 
     setBlogs(prev => prev.map(blog => {
@@ -602,17 +590,12 @@ export default function BlogOptimizerPage() {
           <div className="flex flex-col items-end gap-1">
             <button
               onClick={handleRescore}
-              disabled={rescoring || !canRescore}
+              disabled={rescoring}
               className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-xl transition-colors"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${rescoring ? 'animate-spin' : ''}`} />
               {rescoring ? 'Rescoring…' : 'Rescore All'}
             </button>
-            {!canRescore && !rescoring && (
-              <p className="text-[10px] text-gray-400">
-                Next rescore in {daysUntilRescore}d
-              </p>
-            )}
           </div>
         </div>
       </div>
