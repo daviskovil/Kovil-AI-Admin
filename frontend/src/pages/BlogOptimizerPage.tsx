@@ -210,6 +210,14 @@ const INITIAL_BLOGS: BlogEntry[] = [
   },
 ]
 
+// ─── Baseline scores (used for weighted rescore calculation) ─────────────────
+
+const BASE_SCORES: Record<string, { seo: number; aeo: number; geo: number }> = {}
+INITIAL_BLOGS.forEach(b => { BASE_SCORES[b.slug] = { seo: b.seo, aeo: b.aeo, geo: b.geo } })
+
+const IMPACT_PTS: Record<ActionItem['impact'], number> = { High: 3, Medium: 2, Low: 1 }
+const RESCORE_COOLDOWN_MS = 15 * 24 * 60 * 60 * 1000 // 15 days
+
 // ─── Score URL tab component ──────────────────────────────────────────────────
 
 function ScoreUrlTab({ blogs }: { blogs: BlogEntry[] }) {
@@ -311,10 +319,12 @@ function ActionsModal({
   blog,
   onClose,
   onToggle,
+  onMarkAllDone,
 }: {
   blog: BlogEntry
   onClose: () => void
   onToggle: (blogSlug: string, actionId: string) => void
+  onMarkAllDone: (blogSlug: string) => void
 }) {
   const [filter, setFilter] = useState<'All' | 'SEO' | 'AEO' | 'GEO'>('All')
   const shown = filter === 'All' ? blog.actions : blog.actions.filter(a => a.category === filter)
@@ -417,9 +427,14 @@ function ActionsModal({
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-50 shrink-0 flex items-center justify-between">
-          <p className="text-xs text-gray-400">
-            Click any action to mark it complete
-          </p>
+          <button
+            onClick={() => onMarkAllDone(blog.slug)}
+            disabled={blog.actions.every(a => a.done)}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            Mark all done
+          </button>
           <a
             href={`https://kovil.ai/blog/${blog.slug}`}
             target="_blank"
@@ -441,6 +456,13 @@ export default function BlogOptimizerPage() {
   const [tab, setTab]               = useState<'blogs' | 'score-url'>('blogs')
   const [selected, setSelected]     = useState<BlogEntry | null>(null)
   const [rescoring, setRescoring]   = useState(false)
+  const [lastRescore, setLastRescore] = useState<number>(() => {
+    const stored = localStorage.getItem('blogOptimizerLastRescore')
+    return stored ? parseInt(stored) : 0
+  })
+
+  const canRescore = Date.now() - lastRescore > RESCORE_COOLDOWN_MS
+  const daysUntilRescore = Math.ceil((RESCORE_COOLDOWN_MS - (Date.now() - lastRescore)) / (24 * 60 * 60 * 1000))
 
   const overallScore = Math.round(
     blogs.reduce((sum, b) => sum + avg3(b), 0) / blogs.length
@@ -455,7 +477,6 @@ export default function BlogOptimizerPage() {
           : b
       )
     )
-    // Keep modal in sync
     setSelected(prev =>
       prev?.slug === blogSlug
         ? { ...prev, actions: prev.actions.map(a => a.id === actionId ? { ...a, done: !a.done } : a) }
@@ -463,8 +484,42 @@ export default function BlogOptimizerPage() {
     )
   }
 
+  // Mark every action for a blog as done
+  function markAllDone(blogSlug: string) {
+    setBlogs(prev =>
+      prev.map(b =>
+        b.slug === blogSlug
+          ? { ...b, actions: b.actions.map(a => ({ ...a, done: true })) }
+          : b
+      )
+    )
+    setSelected(prev =>
+      prev?.slug === blogSlug
+        ? { ...prev, actions: prev.actions.map(a => ({ ...a, done: true })) }
+        : prev
+    )
+  }
+
+  // Weighted rescore: each done action adds points toward 95 cap
   function handleRescore() {
+    if (!canRescore) return
+    const now = Date.now()
+    localStorage.setItem('blogOptimizerLastRescore', now.toString())
+    setLastRescore(now)
     setRescoring(true)
+
+    setBlogs(prev => prev.map(blog => {
+      const base = BASE_SCORES[blog.slug]
+      const calcScore = (cat: 'SEO' | 'AEO' | 'GEO', baseScore: number) => {
+        const catActions = blog.actions.filter(a => a.category === cat)
+        if (catActions.length === 0) return baseScore
+        const maxPts  = catActions.reduce((s, a) => s + IMPACT_PTS[a.impact], 0)
+        const donePts = catActions.filter(a => a.done).reduce((s, a) => s + IMPACT_PTS[a.impact], 0)
+        return Math.min(95, baseScore + Math.round((donePts / maxPts) * (95 - baseScore)))
+      }
+      return { ...blog, seo: calcScore('SEO', base.seo), aeo: calcScore('AEO', base.aeo), geo: calcScore('GEO', base.geo) }
+    }))
+
     setTimeout(() => setRescoring(false), 1800)
   }
 
@@ -516,14 +571,21 @@ export default function BlogOptimizerPage() {
             </div>
             <p className="text-[10px] text-gray-400 mt-1">Avg across {blogs.length} blogs</p>
           </div>
-          <button
-            onClick={handleRescore}
-            disabled={rescoring}
-            className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white text-xs font-semibold rounded-xl transition-colors"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${rescoring ? 'animate-spin' : ''}`} />
-            {rescoring ? 'Rescoring…' : 'Rescore All'}
-          </button>
+          <div className="flex flex-col items-end gap-1">
+            <button
+              onClick={handleRescore}
+              disabled={rescoring || !canRescore}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-xl transition-colors"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${rescoring ? 'animate-spin' : ''}`} />
+              {rescoring ? 'Rescoring…' : 'Rescore All'}
+            </button>
+            {!canRescore && !rescoring && (
+              <p className="text-[10px] text-gray-400">
+                Next rescore in {daysUntilRescore}d
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -673,6 +735,7 @@ export default function BlogOptimizerPage() {
           blog={selected}
           onClose={() => setSelected(null)}
           onToggle={toggleAction}
+          onMarkAllDone={markAllDone}
         />
       )}
     </div>
