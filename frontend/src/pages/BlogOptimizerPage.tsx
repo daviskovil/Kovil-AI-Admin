@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft, ExternalLink, X, CheckCircle2, Circle,
@@ -452,7 +452,30 @@ function ActionsModal({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function BlogOptimizerPage() {
-  const [blogs, setBlogs]           = useState<BlogEntry[]>(INITIAL_BLOGS)
+  const [blogs, setBlogs]           = useState<BlogEntry[]>(() => {
+    try {
+      const saved = localStorage.getItem('blogOptimizerBlogs')
+      if (saved) {
+        const parsed: BlogEntry[] = JSON.parse(saved)
+        // Merge saved done/score state onto INITIAL_BLOGS so new actions are never lost
+        return INITIAL_BLOGS.map(initial => {
+          const savedBlog = parsed.find(b => b.slug === initial.slug)
+          if (!savedBlog) return initial
+          return {
+            ...initial,
+            seo: savedBlog.seo,
+            aeo: savedBlog.aeo,
+            geo: savedBlog.geo,
+            actions: initial.actions.map(a => ({
+              ...a,
+              done: savedBlog.actions.find(sa => sa.id === a.id)?.done ?? a.done,
+            })),
+          }
+        })
+      }
+    } catch { /* ignore parse errors */ }
+    return INITIAL_BLOGS
+  })
   const [tab, setTab]               = useState<'blogs' | 'score-url'>('blogs')
   const [selected, setSelected]     = useState<BlogEntry | null>(null)
   const [rescoring, setRescoring]   = useState(false)
@@ -460,6 +483,11 @@ export default function BlogOptimizerPage() {
     const stored = localStorage.getItem('blogOptimizerLastRescore')
     return stored ? parseInt(stored) : 0
   })
+
+  // Persist blogs state (done flags + scores) across page refreshes
+  useEffect(() => {
+    localStorage.setItem('blogOptimizerBlogs', JSON.stringify(blogs))
+  }, [blogs])
 
   const canRescore = Date.now() - lastRescore > RESCORE_COOLDOWN_MS
   const daysUntilRescore = Math.ceil((RESCORE_COOLDOWN_MS - (Date.now() - lastRescore)) / (24 * 60 * 60 * 1000))
