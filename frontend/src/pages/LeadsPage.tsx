@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Search, Filter, ChevronDown } from 'lucide-react'
+import { Search, Filter, Trash2 } from 'lucide-react'
 import api from '../lib/api'
 
 const statusOptions = ['all', 'new', 'contacted', 'in_progress', 'matched', 'closed', 'lost']
@@ -33,6 +33,13 @@ export default function LeadsPage() {
     await api.patch(`/leads/${id}`, { status: newStatus })
     fetchLeads()
     if (selected?.id === id) setSelected({ ...selected, status: newStatus })
+  }
+
+  const deleteLead = async (id: string) => {
+    if (!window.confirm('Delete this lead? This cannot be undone.')) return
+    await api.delete(`/leads/${id}`)
+    setSelected(null)
+    fetchLeads()
   }
 
   return (
@@ -126,7 +133,16 @@ export default function LeadsPage() {
                 <h3 className="font-semibold text-sm text-gray-900 truncate">{selected.name || 'Anonymous'}</h3>
                 <p className="text-xs text-gray-400 truncate">{selected.email}</p>
               </div>
-              <button onClick={() => setSelected(null)} className="text-gray-300 hover:text-gray-500 cursor-pointer text-xl leading-none">×</button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => deleteLead(selected.id)}
+                  title="Delete lead"
+                  className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+                <button onClick={() => setSelected(null)} className="text-gray-300 hover:text-gray-500 cursor-pointer text-xl leading-none">×</button>
+              </div>
             </div>
             <div className="space-y-3.5 text-sm">
               <div><p className="text-[11px] text-gray-400 font-medium mb-0.5 uppercase tracking-wide">Company</p><p className="text-gray-700 text-sm">{selected.company || '—'}</p></div>
