@@ -115,14 +115,23 @@ export default function OpsManagementPage({ defaultTab }: Props) {
 
   const deleteChecked = async () => {
     if (!window.confirm(`Delete ${checkedLeads.size} lead${checkedLeads.size > 1 ? 's' : ''}? This cannot be undone.`)) return
-    await Promise.all([...checkedLeads].map(id => supabase.from('leads').delete().eq('id', id)))
+    const results = await Promise.all([...checkedLeads].map(id => supabase.from('leads').delete().eq('id', id)))
+    const failed = results.filter(r => r.error)
+    if (failed.length > 0) {
+      alert(`Delete failed: ${failed[0].error?.message ?? 'Permission denied. Check Supabase RLS policies.'}`)
+      return
+    }
     setCheckedLeads(new Set())
     fetchLeads()
   }
 
   const deleteLead = async (id: string) => {
     if (!window.confirm('Delete this lead? This cannot be undone.')) return
-    await supabase.from('leads').delete().eq('id', id)
+    const { error } = await supabase.from('leads').delete().eq('id', id)
+    if (error) {
+      alert(`Delete failed: ${error.message ?? 'Permission denied. Check Supabase RLS policies.'}`)
+      return
+    }
     setSelectedLead(null)
     fetchLeads()
   }
