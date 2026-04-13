@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, FileText, UserCheck, Kanban, Plus, Download, Filter, Search, ChevronRight, RefreshCw, X, Mail, Building2, Calendar, Tag, MessageSquare, Globe, Linkedin, ExternalLink, FileDown } from 'lucide-react'
+import { Users, FileText, UserCheck, Kanban, Plus, Download, Filter, Search, ChevronRight, RefreshCw, X, Mail, Building2, Calendar, Tag, MessageSquare, Globe, Linkedin, ExternalLink, FileDown, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 interface Props { defaultTab: 'leads' | 'applications' | 'roster' | 'pipeline' }
@@ -99,6 +99,13 @@ export default function OpsManagementPage({ defaultTab }: Props) {
   // ─── Slide-over state ─────────────────────────────────────────────────────
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)
+
+  const deleteLead = async (id: string) => {
+    if (!window.confirm('Delete this lead? This cannot be undone.')) return
+    await supabase.from('leads').delete().eq('id', id)
+    setSelectedLead(null)
+    fetchLeads()
+  }
 
   const fetchLeads = async () => {
     setLeadsLoading(true)
@@ -397,9 +404,14 @@ export default function OpsManagementPage({ defaultTab }: Props) {
                 <h2 className="text-lg font-bold text-gray-900">{selectedLead.name || selectedLead.email || 'Unknown'}</h2>
                 {selectedLead.company && <p className="text-sm text-gray-400 mt-0.5">{selectedLead.company}</p>}
               </div>
-              <button onClick={() => setSelectedLead(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 cursor-pointer">
-                <X className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button onClick={() => deleteLead(selectedLead.id)} title="Delete lead" className="p-1.5 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition-colors cursor-pointer">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+                <button onClick={() => setSelectedLead(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 cursor-pointer">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             {/* Status bar */}
