@@ -99,6 +99,26 @@ export default function OpsManagementPage({ defaultTab }: Props) {
   // ─── Slide-over state ─────────────────────────────────────────────────────
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)
+  const [checkedLeads, setCheckedLeads] = useState<Set<string>>(new Set())
+
+  const toggleCheck = (id: string) => {
+    setCheckedLeads(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const toggleAll = () => {
+    setCheckedLeads(prev => prev.size === leads.length ? new Set() : new Set(leads.map(l => l.id)))
+  }
+
+  const deleteChecked = async () => {
+    if (!window.confirm(`Delete ${checkedLeads.size} lead${checkedLeads.size > 1 ? 's' : ''}? This cannot be undone.`)) return
+    await Promise.all([...checkedLeads].map(id => supabase.from('leads').delete().eq('id', id)))
+    setCheckedLeads(new Set())
+    fetchLeads()
+  }
 
   const deleteLead = async (id: string) => {
     if (!window.confirm('Delete this lead? This cannot be undone.')) return
@@ -200,6 +220,11 @@ export default function OpsManagementPage({ defaultTab }: Props) {
             <button onClick={fetchLeads} className="flex items-center gap-1.5 text-xs text-gray-500 border border-gray-200 rounded-lg px-3 py-2 hover:border-orange-300 hover:text-orange-500">
               <RefreshCw className="h-3.5 w-3.5" /> Refresh
             </button>
+            {checkedLeads.size > 0 && (
+              <button onClick={deleteChecked} className="flex items-center gap-1.5 text-xs text-white bg-red-500 hover:bg-red-600 rounded-lg px-3 py-2 font-semibold transition-colors cursor-pointer">
+                <Trash2 className="h-3.5 w-3.5" /> Delete {checkedLeads.size} selected
+              </button>
+            )}
           </div>
           {leadsLoading ? (
             <div className="px-5 py-12 text-center text-xs text-gray-400">Loading leads from Supabase…</div>
@@ -212,6 +237,10 @@ export default function OpsManagementPage({ defaultTab }: Props) {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-gray-50">
+                  <th className="pl-5 py-3 w-8">
+                    <input type="checkbox" checked={checkedLeads.size === leads.length && leads.length > 0} onChange={toggleAll}
+                      className="rounded border-gray-300 text-orange-500 cursor-pointer accent-orange-500" />
+                  </th>
                   {['Name / Email', 'Engagement Type', 'Source', 'Status', 'Date', ''].map(h => (
                     <th key={h} className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">{h}</th>
                   ))}
@@ -219,7 +248,11 @@ export default function OpsManagementPage({ defaultTab }: Props) {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {leads.map(lead => (
-                  <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={lead.id} className={`hover:bg-gray-50 transition-colors ${checkedLeads.has(lead.id) ? 'bg-red-50/40' : ''}`}>
+                    <td className="pl-5 py-3 w-8">
+                      <input type="checkbox" checked={checkedLeads.has(lead.id)} onChange={() => toggleCheck(lead.id)}
+                        className="rounded border-gray-300 cursor-pointer accent-orange-500" />
+                    </td>
                     <td className="px-5 py-3">
                       <p className="text-sm font-semibold text-gray-800">{lead.name || lead.email || 'Unknown'}</p>
                       <p className="text-[10px] text-gray-400">{[lead.company, lead.email].filter(Boolean).join(' · ')}</p>
