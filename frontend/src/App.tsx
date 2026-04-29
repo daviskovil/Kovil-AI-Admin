@@ -3,13 +3,15 @@ import { useAuth } from './hooks/useAuth'
 import Layout from './components/Layout'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
-import TrafficIntelligencePage from './pages/TrafficIntelligencePage'
-import AgentDetailPage from './pages/AgentDetailPage'
-import GSCAgentPage from './pages/GSCAgentPage'
-import BlogOptimizerPage from './pages/BlogOptimizerPage'
-import OpsManagementPage from './pages/OpsManagementPage'
-import ConversionIntelligencePage from './pages/ConversionIntelligencePage'
-import ScalingIntelligencePage from './pages/ScalingIntelligencePage'
+import LeadsPage from './pages/LeadsPage'
+import ApplicationsPage from './pages/ApplicationsPage'
+import PagesPage from './pages/PagesPage'
+import NavigationEditorPage from './pages/NavigationEditorPage'
+import BlogEditorPage from './pages/BlogEditorPage'
+import CaseStudyEditorPage from './pages/CaseStudyEditorPage'
+import SEOPanelPage from './pages/SEOPanelPage'
+import MediaLibraryPage from './pages/MediaLibraryPage'
+import AnalyticsPage from './pages/AnalyticsPage'
 import SettingsPage from './pages/SettingsPage'
 
 function ProtectedRoute({ children, user, loading }: { children: React.ReactNode; user: any; loading: boolean }) {
@@ -36,31 +38,22 @@ export default function App() {
             <Layout user={user!} onLogout={logout} />
           </ProtectedRoute>
         }>
-          <Route index element={<DashboardPage />} />
+          <Route index                  element={<DashboardPage />} />
+          <Route path="leads"           element={<LeadsPage />} />
+          <Route path="applications"    element={<ApplicationsPage />} />
+          <Route path="pages"           element={<PagesPage />} />
+          <Route path="navigation"      element={<NavigationEditorPage />} />
+          <Route path="blog-editor"     element={<BlogEditorPage />} />
+          <Route path="case-study-editor" element={<CaseStudyEditorPage />} />
+          <Route path="seo"             element={<SEOPanelPage />} />
+          <Route path="media"           element={<MediaLibraryPage />} />
+          <Route path="analytics"       element={<AnalyticsPage />} />
+          <Route path="settings"        element={<SettingsPage />} />
 
-          {/* Traffic Intelligence */}
-          <Route path="traffic" element={<TrafficIntelligencePage />} />
-          <Route path="traffic/t-gsc" element={<GSCAgentPage />} />
-          <Route path="traffic/t-blog-optimizer" element={<BlogOptimizerPage />} />
-          <Route path="traffic/:agentId" element={<AgentDetailPage />} />
-
-          {/* Ops Management */}
-          <Route path="ops" element={<Navigate to="/ops/leads" replace />} />
-          <Route path="ops/leads" element={<OpsManagementPage defaultTab="leads" />} />
-          <Route path="ops/applications" element={<OpsManagementPage defaultTab="applications" />} />
-          <Route path="ops/roster" element={<OpsManagementPage defaultTab="roster" />} />
-          <Route path="ops/pipeline" element={<OpsManagementPage defaultTab="pipeline" />} />
-
-          {/* Conversion Intelligence */}
-          <Route path="conversion" element={<ConversionIntelligencePage />} />
-          <Route path="conversion/:agentId" element={<AgentDetailPage />} />
-
-          {/* Scaling Intelligence */}
-          <Route path="scaling" element={<ScalingIntelligencePage />} />
-          <Route path="scaling/:agentId" element={<AgentDetailPage />} />
-
-          {/* Settings */}
-          <Route path="settings" element={<SettingsPage />} />
+          {/* Legacy redirects — keep old deep-links working */}
+          <Route path="ops/leads"        element={<Navigate to="/leads" replace />} />
+          <Route path="ops/applications" element={<Navigate to="/applications" replace />} />
+          <Route path="ops"              element={<Navigate to="/leads" replace />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

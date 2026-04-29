@@ -1,9 +1,8 @@
-import { useState } from 'react'
-import { NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard, Briefcase,
-  Settings, LogOut, ChevronDown, ChevronRight,
-  Users, FileText, UserCheck, Kanban,
+  LayoutDashboard, Users, FileText, Globe, Navigation,
+  BookOpen, BookMarked, Search, Image, BarChart2,
+  Settings, LogOut,
 } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
 
@@ -13,31 +12,30 @@ interface Props {
 }
 
 export default function Sidebar({ user, onLogout }: Props) {
-  const navigate  = useNavigate()
-  const location  = useLocation()
-  const [opsOpen, setOpsOpen] = useState(location.pathname.startsWith('/ops'))
-
+  const navigate = useNavigate()
   const handleLogout = () => { onLogout(); navigate('/login') }
 
-  const isOpsActive = location.pathname.startsWith('/ops')
-
-  const navItem = (active: boolean) =>
-    `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer mb-0.5 ${
-      active
-        ? 'bg-orange-50 text-orange-500 font-semibold border-l-[3px] border-orange-400'
-        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800 border-l-[3px] border-transparent'
-    }`
-
-  const navLinkClass = ({ isActive }: { isActive: boolean }) => navItem(isActive)
-
-  const subNavLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-2.5 pl-10 pr-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer mb-0.5 ${
+  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer mb-0.5 border-l-[3px] ${
       isActive
-        ? 'bg-orange-50 text-orange-500 font-semibold'
-        : 'text-gray-400 hover:bg-gray-50 hover:text-gray-700'
+        ? 'bg-orange-50 text-orange-500 font-semibold border-orange-400'
+        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800 border-transparent'
     }`
 
   const userInitial = user.email?.charAt(0).toUpperCase() ?? 'A'
+
+  const navItems = [
+    { to: '/',                  end: true,  icon: LayoutDashboard, label: 'Dashboard'          },
+    { to: '/leads',             end: false, icon: Users,           label: 'Leads'              },
+    { to: '/applications',      end: false, icon: FileText,        label: 'Applications'       },
+    { to: '/pages',             end: false, icon: Globe,           label: 'Pages'              },
+    { to: '/navigation',        end: false, icon: Navigation,      label: 'Navigation Editor'  },
+    { to: '/blog-editor',       end: false, icon: BookOpen,        label: 'Blog Editor'        },
+    { to: '/case-study-editor', end: false, icon: BookMarked,      label: 'Case Study Editor'  },
+    { to: '/seo',               end: false, icon: Search,          label: 'SEO Panel'          },
+    { to: '/media',             end: false, icon: Image,           label: 'Media Library'      },
+    { to: '/analytics',         end: false, icon: BarChart2,       label: 'Analytics'          },
+  ]
 
   return (
     <aside className="fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-100 flex flex-col z-30">
@@ -57,44 +55,20 @@ export default function Sidebar({ user, onLogout }: Props) {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
-
-        {/* Dashboard */}
-        <NavLink to="/" end className={navLinkClass}>
-          <LayoutDashboard className="h-4 w-4 shrink-0" />
-          <span className="flex-1">Dashboard</span>
-        </NavLink>
-
-        {/* Ops Management */}
-        <button
-          onClick={() => setOpsOpen(!opsOpen)}
-          className={navItem(isOpsActive) + ' w-full'}
-        >
-          <Briefcase className="h-4 w-4 shrink-0" />
-          <span className="flex-1 text-left">Ops Management</span>
-          {opsOpen
-            ? <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
-            : <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-50" />
-          }
-        </button>
-
-        {opsOpen && (
-          <div className="space-y-0.5 mb-1">
-            <NavLink to="/ops/leads"        className={subNavLinkClass}><Users    className="h-3.5 w-3.5 shrink-0" />Leads</NavLink>
-            <NavLink to="/ops/applications" className={subNavLinkClass}><FileText className="h-3.5 w-3.5 shrink-0" />Applications</NavLink>
-            <NavLink to="/ops/roster"       className={subNavLinkClass}><UserCheck className="h-3.5 w-3.5 shrink-0" />Builder Roster</NavLink>
-            <NavLink to="/ops/pipeline"     className={subNavLinkClass}><Kanban   className="h-3.5 w-3.5 shrink-0" />Pipeline / CRM</NavLink>
-          </div>
-        )}
+        {navItems.map(({ to, end, icon: Icon, label }) => (
+          <NavLink key={to} to={to} end={end} className={navLinkClass}>
+            <Icon className="h-4 w-4 shrink-0" />
+            <span className="flex-1">{label}</span>
+          </NavLink>
+        ))}
 
         {/* Divider */}
         <div className="pt-2 border-t border-gray-100 mt-2" />
 
-        {/* Settings */}
         <NavLink to="/settings" className={navLinkClass}>
           <Settings className="h-4 w-4 shrink-0" />
           <span className="flex-1">Settings</span>
         </NavLink>
-
       </nav>
 
       {/* User footer */}
