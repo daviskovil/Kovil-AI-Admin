@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
-  LayoutDashboard, Search, Briefcase, Target, TrendingUp,
+  LayoutDashboard, Briefcase,
   Settings, LogOut, ChevronDown, ChevronRight,
   Users, FileText, UserCheck, Kanban,
 } from 'lucide-react'
@@ -19,10 +19,7 @@ export default function Sidebar({ user, onLogout }: Props) {
 
   const handleLogout = () => { onLogout(); navigate('/login') }
 
-  const isOpsActive        = location.pathname.startsWith('/ops')
-  const isTrafficActive    = location.pathname.startsWith('/traffic')
-  const isConversionActive = location.pathname.startsWith('/conversion')
-  const isScalingActive    = location.pathname.startsWith('/scaling')
+  const isOpsActive = location.pathname.startsWith('/ops')
 
   const navItem = (active: boolean) =>
     `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer mb-0.5 ${
@@ -67,20 +64,6 @@ export default function Sidebar({ user, onLogout }: Props) {
           <span className="flex-1">Dashboard</span>
         </NavLink>
 
-        {/* Divider */}
-        <div className="py-2">
-          <p className="text-[10px] font-semibold text-gray-300 uppercase tracking-widest px-4">Growth</p>
-        </div>
-
-        {/* Traffic Intelligence */}
-        <NavLink
-          to="/traffic"
-          className={() => navItem(isTrafficActive)}
-        >
-          <Search className="h-4 w-4 shrink-0" />
-          <span className="flex-1">Traffic Intelligence</span>
-        </NavLink>
-
         {/* Ops Management */}
         <button
           onClick={() => setOpsOpen(!opsOpen)}
@@ -102,31 +85,6 @@ export default function Sidebar({ user, onLogout }: Props) {
             <NavLink to="/ops/pipeline"     className={subNavLinkClass}><Kanban   className="h-3.5 w-3.5 shrink-0" />Pipeline / CRM</NavLink>
           </div>
         )}
-
-        {/* Divider */}
-        <div className="py-2">
-          <p className="text-[10px] font-semibold text-gray-300 uppercase tracking-widest px-4">Upcoming</p>
-        </div>
-
-        {/* Conversion Intelligence */}
-        <NavLink
-          to="/conversion"
-          className={() => navItem(isConversionActive)}
-        >
-          <Target className="h-4 w-4 shrink-0" />
-          <span className="flex-1">Conversion Intelligence</span>
-          <span className="text-[9px] font-bold bg-orange-100 text-orange-400 px-1.5 py-0.5 rounded-full">Soon</span>
-        </NavLink>
-
-        {/* Scaling Intelligence */}
-        <NavLink
-          to="/scaling"
-          className={() => navItem(isScalingActive)}
-        >
-          <TrendingUp className="h-4 w-4 shrink-0" />
-          <span className="flex-1">Scaling Intelligence</span>
-          <span className="text-[9px] font-bold bg-orange-100 text-orange-400 px-1.5 py-0.5 rounded-full">Soon</span>
-        </NavLink>
 
         {/* Divider */}
         <div className="pt-2 border-t border-gray-100 mt-2" />
